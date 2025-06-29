@@ -224,7 +224,7 @@
         function appendPrompt(command) {
             const line = document.createElement('div');
             line.className = 'output-line output-prompt';
-            line.innerText = `gurapp@terminal $ ${command}`;
+            line.innerText = `command $ ${command}`;
             outputDiv.appendChild(line);
             outputDiv.scrollTop = outputDiv.scrollHeight;
         }
@@ -505,9 +505,11 @@
         inputField.focus();
 
         // Initial welcome message
-        appendOutput('Welcome to Gurasuraisu Terminal Gurapp!', 'output-info');
+        appendOutput('Gurasuraisu Terminal', 'output-info');
+        appendOutput('Commands executed in the Terminal may NOT be reversible!', 'output-info');
+        appendOutput('If someone told you to copy/paste something here, there’s an 200/10 chance you’re being scammed. Pasting anything in here could give attackers access to your Gurasuraisu data.', 'output-info');
         appendOutput('Type \'help\' to see a list of commands.', 'output-info');
-        appendOutput('Note: Commands like "eval", "install app", "delete app", "clear storage", "clear wallpapers", and "reboot" are privileged and may require confirmation in the parent Gurasuraisu window.', 'output-info');
+        appendOutput('Some commands are privileged and may require confirmation in the parent Gurasuraisu window.', 'output-info');
 
         // Handle messages from the parent (Gurasuraisu)
         window.addEventListener('message', (event) => {
