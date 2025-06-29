@@ -4,81 +4,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal only works with Gurasuraisu.</title>
+    <title>Terminal Gurapp</title>
+    <!-- Using Inter font for consistency, but keeping Roboto Mono for the terminal feel -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
     <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
     <style>
-        /* Inherit Gurasuraisu theme variables */
+        /* Inherit Gurasuraisu theme variables directly */
         :root {
-            /* Fallback values for development outside Gurasuraisu */
-            --background-color: #1c1c1c;
-            --text-color: #f9f9f9;
-            --secondary-text-color: rgba(255, 255, 255, 0.7);
-            --modal-background: rgba(51, 51, 51, 0.8);
-            --modal-transparent: rgba(51, 51, 51, 0.7);
-            --search-background: rgba(51, 51, 51, 0.5);
-            --overlay-color: rgba(51, 51, 51, 0.2);
-            --transparent-color: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(100, 100, 100, 0.2);
+            /* Default to Dark Theme variables (inherited from Gurasuraisu parent) */
+            /* These are fallbacks if run standalone, Gurasuraisu will provide them */
+            --background-color-dark: #1c1c1c;
+            --text-color-dark: #f9f9f9;
+            --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
+            --modal-background-dark: rgba(51, 51, 51, 0.8);
+            --modal-transparent-dark: rgba(51, 51, 51, 0.7);
+            --search-background-dark: rgba(51, 51, 51, 0.5);
+            --glass-border-dark: rgba(100, 100, 100, 0.2);
 
-            /* Terminal specific colors, using Gurasuraisu variables */
-            --terminal-bg: var(--background-color);
-            --terminal-text: var(--text-color); /* Primary text color */
-            --terminal-input-bg: var(--search-background);
-            --terminal-border: var(--glass-border);
-            --terminal-prompt: var(--secondary-text-color);
-            --terminal-error: #ff5e5e; /* Softer red */
-            --terminal-info: #5effff; /* Softer cyan */
-            --terminal-success: #5eff5e; /* Softer green */
+            /* Light Theme variables (inherited from Gurasuraisu parent) */
+            --background-color-light: #f0f0f0;
+            --text-color-light: #333333;
+            --secondary-text-color-light: rgba(0, 0, 0, 0.7);
+            --modal-background-light: rgba(220, 220, 220, 0.8);
+            --modal-transparent-light: rgba(240, 240, 240, 0.7);
+            --search-background-light: rgba(220, 220, 220, 0.5);
+            --glass-border-light: rgba(200, 200, 200, 0.2);
+
+            /* Gurapp-specific interpretation of Gurasuraisu variables */
+            --gurapp-background: var(--background-color-dark);
+            --gurapp-text-primary: var(--text-color-dark);
+            --gurapp-text-secondary: var(--secondary-text-color-dark);
+            --gurapp-glass-bg: var(--modal-transparent-dark);
+            --gurapp-input-bg: var(--search-background-dark);
+            --gurapp-border: var(--glass-border-dark);
+
+            /* Semantic colors, designed to be subtle and theme-aware */
+            --terminal-error-color: #e57373; /* Light red */
+            --terminal-info-color: #64b5f6; /* Light blue */
+            --terminal-success-color: #81c784; /* Light green */
         }
 
+        /* Default to Dark Theme colors */
+        body {
+            --gurapp-background: var(--background-color-dark);
+            --gurapp-text-primary: var(--text-color-dark);
+            --gurapp-text-secondary: var(--secondary-text-color-dark);
+            --gurapp-glass-bg: var(--modal-transparent-dark);
+            --gurapp-input-bg: var(--search-background-dark);
+            --gurapp-border: var(--glass-border-dark);
+
+            --terminal-error-color: #e57373;
+            --terminal-info-color: #64b5f6;
+            --terminal-success-color: #81c784;
+        }
+        
         /* Light Theme overrides for terminal */
         body.light-theme {
-            --terminal-bg: var(--background-color);
-            --terminal-text: var(--text-color);
-            --terminal-input-bg: var(--search-background);
-            --terminal-border: var(--glass-border);
-            --terminal-prompt: var(--secondary-text-color);
-            --terminal-error: #e62e2e;
-            --terminal-info: #00bfff;
-            --terminal-success: #2ec12e;
-        }
+            --gurapp-background: var(--background-color-light);
+            --gurapp-text-primary: var(--text-color-light);
+            --gurapp-text-secondary: var(--secondary-text-color-light);
+            --gurapp-glass-bg: var(--modal-transparent-light);
+            --gurapp-input-bg: var(--search-background-light);
+            --gurapp-border: var(--glass-border-light);
 
+            --terminal-error-color: #c62828; /* Darker red */
+            --terminal-info-color: #1976d2; /* Darker blue */
+            --terminal-success-color: #388e3c; /* Darker green */
+        }
+        
+        /* Global styles for cursor and numeric alignment (from Gurasuraisu common styles) */
         * {
-            font-variant-numeric: tabular-nums; /* Align numbers in columns */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif; /* Default font, adjusted below for terminal specifics */
+            -webkit-tap-highlight-color: transparent;
+            font-variant-numeric: tabular-nums;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
         }
 
         body {
-            font-family: 'Roboto Mono', monospace; /* Keep monospace for terminal, but use Inter as fallback for other elements */
-            background-color: var(--terminal-bg);
-            color: var(--terminal-text);
-            margin: 0;
+            font-family: 'Roboto Mono', monospace; /* Keep monospace for terminal content */
+            background-color: var(--gurapp-background);
+            color: var(--gurapp-text-primary);
             padding: 20px;
             display: flex;
             flex-direction: column;
             height: 100vh;
-            overflow: hidden; /* Prevent body scroll */
-            user-select: text; /* Allow text selection */
+            overflow: hidden;
+            user-select: text;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            box-sizing: border-box; /* Include padding in element's total width and height */
             transition: background-color 0.3s, color 0.3s; /* Smooth theme transitions */
         }
 
         #terminal-output {
             flex-grow: 1;
             overflow-y: auto;
-            border: 1px solid var(--terminal-border);
+            border: 1px solid var(--gurapp-border);
             padding: 15px;
             margin-bottom: 15px;
-            white-space: pre-wrap; /* Preserve whitespace and wrap long lines */
-            word-break: break-all; /* Break words to prevent overflow */
-            background-color: var(--modal-transparent); /* Use transparent modal background */
+            white-space: pre-wrap;
+            word-break: break-all;
+            background-color: var(--gurapp-glass-bg); /* Use theme variable for glass effect */
             border-radius: 15px; /* Rounded corners like other Gurapps */
             scroll-behavior: smooth;
             backdrop-filter: blur(10px); /* Glassmorphism effect */
             -webkit-backdrop-filter: blur(10px);
+            font-size: 0.9em; /* Slightly smaller for more lines */
         }
 
         /* Scrollbar styles matching Gurasuraisu */
@@ -98,29 +132,32 @@
         .terminal-input-container {
             display: flex;
             align-items: center;
-            border: 1px solid var(--terminal-border);
+            border: 1px solid var(--gurapp-border);
             border-radius: 25px; /* More rounded for input */
-            background-color: var(--terminal-input-bg);
+            background-color: var(--gurapp-input-bg);
             padding: 10px 15px;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         .terminal-prompt {
-            color: var(--terminal-prompt);
+            color: var(--gurapp-text-secondary); /* Secondary text color for prompt */
             margin-right: 8px;
             flex-shrink: 0;
+            font-family: 'Inter', sans-serif; /* Use Inter for prompt for better integration */
+            font-weight: 500;
         }
 
         #terminal-input {
             flex-grow: 1;
             background: transparent;
             border: none;
-            color: var(--terminal-text);
-            font-family: 'Roboto Mono', monospace;
+            color: var(--gurapp-text-primary); /* Primary text color for input */
+            font-family: 'Roboto Mono', monospace; /* Keep monospace for input content */
             font-size: 1em;
-            outline: none; /* Remove focus outline */
-            caret-color: var(--terminal-text); /* Blinking cursor */
+            outline: none;
+            caret-color: var(--gurapp-text-primary); /* Cursor matches primary text */
             padding: 0;
         }
 
@@ -130,19 +167,41 @@
         }
 
         .output-info {
-            color: var(--terminal-info);
+            color: var(--terminal-info-color); /* Themed info color */
         }
 
         .output-error {
-            color: var(--terminal-error);
+            color: var(--terminal-error-color); /* Themed error color */
         }
 
         .output-success {
-            color: var(--terminal-success);
+            color: var(--terminal-success-color); /* Themed success color */
         }
 
         .output-prompt {
-            color: var(--terminal-prompt);
+            color: var(--gurapp-text-secondary); /* Prompt in output uses secondary text color */
+        }
+
+        /* Reduce animations (from Gurasuraisu common styles) */
+        body.reduce-animations * {
+            animation: none !important;
+            transition: opacity 0.3s ease !important;
+            transition-property: opacity !important;
+        }
+        body.reduce-animations button,
+        body.reduce-animations .tab-btn,
+        body.reduce-animations .action-btn,
+        body.reduce-animations .btn {
+            transform: scale(1) !important;
+            transition: opacity 0.3s ease !important;
+        }
+        body.reduce-animations button:active,
+        body.reduce-animations .tab-btn:active,
+        body.reduce-animations .action-btn:active,
+        body.reduce-animations .btn:active {
+            transform: scale(0.98) !important;
+            transition: none !important;
+            filter: brightness(1.5);
         }
 
         /* Responsive adjustments */
@@ -160,7 +219,7 @@
                 border-radius: 20px;
             }
             #terminal-output, .terminal-input-container {
-                font-size: 0.9em;
+                font-size: 0.85em; /* Further adjustment for small screens */
             }
         }
     </style>
@@ -566,9 +625,8 @@
 
         // Initialize theme and animations on load based on parent's state
         document.addEventListener('DOMContentLoaded', () => {
-            // Request parent for current theme and animation status if not set initially
-            // This is handled by gurasuraisu-api.js automatically for theme and animations.
-            // But if you needed other specific parent states, you'd request them here.
+            // This is automatically handled by gurasuraisu-api.js for theme and animations.
+            // No explicit call needed here.
         });
     </script>
 </body>
