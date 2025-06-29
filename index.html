@@ -208,10 +208,7 @@
 
     <script>
         document.body.dataset.appName = "Terminal"; // Ensure this is set for API calls
-
-        let commandHistory = [];
-        let historyIndex = -1;
-
+        
         let isEvalUnlocked = false;
         let evalUnlockTimeout = null;
         let evalChallengeState = { question: null, answer: null };
