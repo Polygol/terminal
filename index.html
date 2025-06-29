@@ -209,10 +209,10 @@
     <script>
         document.body.dataset.appName = "Terminal"; // Ensure this is set for API calls
         
-        let isEvalUnlocked = false;
-        let evalUnlockTimeout = null;
-        let evalChallengeState = { question: null, answer: null };
-
+        let arePrivilegedCommandsUnlocked = false;
+        let privilegedCommandsTimeout = null;
+        let privilegedChallengeState = { question: null, answer: null };
+        
         const outputDiv = document.getElementById('terminal-output');
         const inputField = document.getElementById('terminal-input');
         let commandHistory = [];
@@ -261,13 +261,13 @@
             'minimize': 'Minimizes the current Terminal Gurapp.',
             'blackout': 'Turns the Gurasuraisu screen black.',
             'list apps': 'Lists all installed Gurapps.',
-            'install app <name> <url> <iconUrl>': 'Installs a new Gurapp (privileged).',
+            'install app <name> <url> <iconUrl>': 'Installs a new Gurapp (privileged, dangerous. Requires unlock).',
             'delete app <name>': 'Deletes an installed Gurapp (privileged).',
             'get time': 'Gets the current time from Gurasuraisu.',
             'reboot': 'Reloads the Gurasuraisu parent page (privileged).',
             'pwa install': 'Prompts Gurasuraisu to install as a PWA.',
-            'unlock eval <answer>': 'Solves the challenge to unlock the eval command for 10 minutes.',
-            'eval <javascript_code>': 'Executes JavaScript code in the parent context (HIGHLY PRIVILEGED & DANGEROUS! Requires unlock).'
+            'unlock <answer>': 'Solves the challenge to unlock the run command for 10 minutes.',
+            'run <javascript_code>': 'Executes JavaScript code in the parent context (HIGHLY PRIVILEGED & DANGEROUS! Requires unlock).'
         };
 
         async function handleCommand(command) {
@@ -414,6 +414,21 @@
                     Gurasuraisu.showNotification('Screen blacked out.', { icon: 'power_settings_new' });
                     break;
                 case 'install':
+                    if (!arePrivilegedCommandsUnlocked) {
+                        if (!privilegedChallengeState.question) {
+                            const num1 = Math.floor(Math.random() * 20) + 1;
+                            const num2 = Math.floor(Math.random() * 20) + 1;
+                            privilegedChallengeState.question = `What is ${num1} + ${num2}?`;
+                            privilegedChallengeState.answer = (num1 + num2).toString();
+                        }
+                        appendOutput('WARNING: The "install" command is privileged and can add malicious apps to your system.', 'output-error');
+                        appendOutput('To prevent accidental use, please solve the following challenge:', 'output-info');
+                        appendOutput(`CHALLENGE: ${privilegedChallengeState.question}`, 'output-info');
+                        appendOutput('Unlock by typing: unlock run <your_answer>', 'output-info');
+                        Gurasuraisu.showPopup('The "install" command is protected.');
+                        break;
+                    }
+
                     if (args[0] === 'app' && args.length >= 4) {
                         const appName = args[1];
                         const appUrl = args[2];
@@ -465,47 +480,47 @@
                     }
                     break;
                 case 'unlock':
-                    if (args[0] === 'eval' && args[1] !== undefined) {
-                        if (!evalChallengeState.answer) {
-                            appendOutput('No active challenge. Try running the "eval" command first.', 'output-error');
+                    if (args[0] === 'run' && args[1] !== undefined) {
+                        if (!privilegedChallengeState.answer) {
+                            appendOutput('No active challenge. Try running a privileged command first.', 'output-error');
                             break;
                         }
                         const userAnswer = args[1].toString();
-                        if (userAnswer === evalChallengeState.answer) {
-                            isEvalUnlocked = true;
-                            appendOutput('Correct! The "eval" command is now unlocked for 10 minutes.', 'output-success');
+                        if (userAnswer === privilegedChallengeState.answer) {
+                            arePrivilegedCommandsUnlocked = true;
+                            appendOutput('Privileged commands are now unlocked for 10 minutes.', 'output-success');
                             
-                            if (evalUnlockTimeout) clearTimeout(evalUnlockTimeout);
+                            if (privilegedCommandsTimeout) clearTimeout(privilegedCommandsTimeout);
 
-                            evalUnlockTimeout = setTimeout(() => {
-                                isEvalUnlocked = false;
-                                evalUnlockTimeout = null;
-                                appendOutput('Access to "eval" command has expired and is now locked.', 'output-info');
-                                Gurasuraisu.showPopup('Eval command access has expired.');
+                            privilegedCommandsTimeout = setTimeout(() => {
+                                arePrivilegedCommandsUnlocked = false;
+                                privilegedCommandsTimeout = null;
+                                appendOutput('Access to privileged commands has expired and is now locked.', 'output-info');
+                                Gurasuraisu.showPopup('Privileged command access has expired.');
                             }, 10 * 60 * 1000); // 10 minutes
 
-                            evalChallengeState = { question: null, answer: null };
+                            privilegedChallengeState = { question: null, answer: null };
                         } else {
-                            appendOutput('Incorrect answer. The challenge has been reset.', 'output-error');
-                            evalChallengeState = { question: null, answer: null };
+                            appendOutput('Try again. The challenge has been reset.', 'output-error');
+                            privilegedChallengeState = { question: null, answer: null };
                         }
                     } else {
-                        appendOutput('Usage: unlock eval <answer>', 'output-error');
+                        appendOutput('Usage: unlock <answer>', 'output-error');
                     }
                     break;
-                case 'eval':
-                    if (!isEvalUnlocked) {
-                        if (!evalChallengeState.question) {
+                case 'run':
+                    if (!arePrivilegedCommandsUnlocked) {
+                        if (!privilegedChallengeState.question) {
                             const num1 = Math.floor(Math.random() * 20) + 1;
                             const num2 = Math.floor(Math.random() * 20) + 1;
-                            evalChallengeState.question = `What is ${num1} + ${num2}?`;
-                            evalChallengeState.answer = (num1 + num2).toString();
+                            privilegedChallengeState.question = `What is ${num1} + ${num2}?`;
+                            privilegedChallengeState.answer = (num1 + num2).toString();
                         }
-                        appendOutput('WARNING: The "eval" command is highly privileged and can compromise your Gurasuraisu data if misused.', 'output-error');
+                        appendOutput('WARNING: The "run" command is highly privileged and can compromise your Gurasuraisu data if misused.', 'output-error');
                         appendOutput('To prevent accidental use, please solve the following challenge:', 'output-info');
-                        appendOutput(`CHALLENGE: ${evalChallengeState.question}`, 'output-info');
-                        appendOutput('Unlock by typing: unlock eval <your_answer>', 'output-info');
-                        Gurasuraisu.showPopup('The "eval" command is protected.');
+                        appendOutput(`CHALLENGE: ${privilegedChallengeState.question}`, 'output-info');
+                        appendOutput('Unlock by typing: unlock run <your_answer>', 'output-info');
+                        Gurasuraisu.showPopup('The "run" command is protected.');
                         break;
                     }
 
@@ -514,8 +529,8 @@
                         Gurasuraisu._call('executeParentJS', [code]);
                         appendOutput(`Executing JS in parent: '${code}'`, 'output-info');
                     } else {
-                        appendOutput('Usage: eval <javascript_code>', 'output-error');
-                        Gurasuraisu.showPopup('Usage: eval <javascript_code>');
+                        appendOutput('Usage: run <javascript_code>', 'output-error');
+                        Gurasuraisu.showPopup('Usage: run <javascript_code>');
                     }
                     break;
                 default:
