@@ -201,7 +201,7 @@
 <body data-app-name="Terminal">
     <div id="terminal-output"></div>
     <div class="terminal-input-container">
-        <span class="terminal-prompt">></span>
+        <span class="terminal-prompt">CMD></span>
         <input type="text" id="terminal-input" autofocus autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
 
@@ -224,7 +224,7 @@
         function appendPrompt(command) {
             const line = document.createElement('div');
             line.className = 'output-line output-prompt';
-            line.innerText = `cmd> ${command}`;
+            line.innerText = `CMD> ${command}`;
             outputDiv.appendChild(line);
             outputDiv.scrollTop = outputDiv.scrollHeight;
         }
