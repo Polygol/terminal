@@ -204,9 +204,17 @@
         <span class="terminal-prompt">CMD></span>
         <input type="text" id="terminal-input" autofocus autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
+    <span style="text-align: center; font-size: 10px;">Do not paste unknown commands in Terminal</span>
 
     <script>
         document.body.dataset.appName = "Terminal"; // Ensure this is set for API calls
+
+        let commandHistory = [];
+        let historyIndex = -1;
+
+        let isEvalUnlocked = false;
+        let evalUnlockTimeout = null;
+        let evalChallengeState = { question: null, answer: null };
 
         const outputDiv = document.getElementById('terminal-output');
         const inputField = document.getElementById('terminal-input');
@@ -261,7 +269,8 @@
             'get time': 'Gets the current time from Gurasuraisu.',
             'reboot': 'Reloads the Gurasuraisu parent page (privileged).',
             'pwa install': 'Prompts Gurasuraisu to install as a PWA.',
-            'eval <javascript_code>': 'Executes JavaScript code directly in the Gurasuraisu parent context (HIGHLY PRIVILEGED & DANGEROUS!).'
+            'unlock eval <answer>': 'Solves the challenge to unlock the eval command for 10 minutes.',
+            'eval <javascript_code>': 'Executes JavaScript code in the parent context (HIGHLY PRIVILEGED & DANGEROUS! Requires unlock).'
         };
 
         async function handleCommand(command) {
@@ -458,7 +467,51 @@
                         Gurasuraisu.showPopup('Invalid "pwa" command usage.');
                     }
                     break;
+                case 'unlock':
+                    if (args[0] === 'eval' && args[1] !== undefined) {
+                        if (!evalChallengeState.answer) {
+                            appendOutput('No active challenge. Try running the "eval" command first.', 'output-error');
+                            break;
+                        }
+                        const userAnswer = args[1].toString();
+                        if (userAnswer === evalChallengeState.answer) {
+                            isEvalUnlocked = true;
+                            appendOutput('Correct! The "eval" command is now unlocked for 10 minutes.', 'output-success');
+                            
+                            if (evalUnlockTimeout) clearTimeout(evalUnlockTimeout);
+
+                            evalUnlockTimeout = setTimeout(() => {
+                                isEvalUnlocked = false;
+                                evalUnlockTimeout = null;
+                                appendOutput('Access to "eval" command has expired and is now locked.', 'output-info');
+                                Gurasuraisu.showPopup('Eval command access has expired.');
+                            }, 10 * 60 * 1000); // 10 minutes
+
+                            evalChallengeState = { question: null, answer: null };
+                        } else {
+                            appendOutput('Incorrect answer. The challenge has been reset.', 'output-error');
+                            evalChallengeState = { question: null, answer: null };
+                        }
+                    } else {
+                        appendOutput('Usage: unlock eval <answer>', 'output-error');
+                    }
+                    break;
                 case 'eval':
+                    if (!isEvalUnlocked) {
+                        if (!evalChallengeState.question) {
+                            const num1 = Math.floor(Math.random() * 20) + 1;
+                            const num2 = Math.floor(Math.random() * 20) + 1;
+                            evalChallengeState.question = `What is ${num1} + ${num2}?`;
+                            evalChallengeState.answer = (num1 + num2).toString();
+                        }
+                        appendOutput('WARNING: The "eval" command is highly privileged and can compromise your Gurasuraisu data if misused.', 'output-error');
+                        appendOutput('To prevent accidental use, please solve the following challenge:', 'output-info');
+                        appendOutput(`CHALLENGE: ${evalChallengeState.question}`, 'output-info');
+                        appendOutput('Unlock by typing: unlock eval <your_answer>', 'output-info');
+                        Gurasuraisu.showPopup('The "eval" command is protected.');
+                        break;
+                    }
+
                     if (args.length > 0) {
                         const code = args.join(' ');
                         Gurasuraisu._call('executeParentJS', [code]);
