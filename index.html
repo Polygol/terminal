@@ -272,9 +272,34 @@
 
         async function handleCommand(command) {
             appendPrompt(command);
-            const parts = command.trim().split(/\s+/);
-            const cmd = parts[0];
-            const args = parts.slice(1);
+            const rawParts = command.trim().split(/\s+/);
+            if (!rawParts[0]) return; // Handle empty input
+
+            let cmd = rawParts[0];
+            let args = rawParts.slice(1);
+
+            // List of commands that can have a second word to form a multi-word command
+            const multiWordBases = ['get', 'set', 'rm', 'ls', 'list', 'open', 'show', 'delete', 'switch', 'install', 'pwa'];
+            
+            if (multiWordBases.includes(cmd) && args.length > 0) {
+                // Form a potential multi-word command, e.g., "get storage"
+                const potentialCmd = `${cmd} ${args[0]}`;
+                // Check against a list of valid multi-word commands
+                const validMultiWordCommands = [
+                    'get storage', 'get setting', 'get brightness', 'get theme', 'get animations', 'get time',
+                    'set storage', 'set setting', 'set brightness', 'set theme', 'set animations',
+                    'rm storage', 'rm wallpaper',
+                    'ls storage', 'ls wallpapers',
+                    'list settings', 'list apps',
+                    'open app', 'show popup', 'show notification',
+                    'delete app', 'switch wallpaper', 'install app', 'pwa install'
+                ];
+                
+                if (validMultiWordCommands.includes(potentialCmd)) {
+                    cmd = potentialCmd;   // The command is now the full "get storage"
+                    args = args.slice(1); // The args are what's left
+                }
+            }
 
             switch (cmd) {
                 case 'help':
@@ -298,122 +323,157 @@
                         Gurasuraisu.showPopup('Invalid "clear" command usage.');
                     }
                     break;
-                case 'get':
-                    if (args[0] === 'storage' && args[1]) {
-                        Gurasuraisu._call('getLocalStorageItem', [args[1]]);
-                    } else if (args[0] === 'setting' && args[1]) {
-                        Gurasuraisu._call('getLocalStorageItem', [args[1]]);
-                    } else if (args[0] === 'brightness') {
-                        Gurasuraisu._call('getLocalStorageItem', ['page_brightness']);
-                    } else if (args[0] === 'theme') {
-                        Gurasuraisu._call('getLocalStorageItem', ['theme']);
-                    } else if (args[0] === 'animations') {
-                        Gurasuraisu._call('getLocalStorageItem', ['animationsEnabled']);
-                    } else if (args[0] === 'time') {
-                        Gurasuraisu._call('getCurrentTimeParent');
+
+                // --- Multi-word commands ---
+                case 'get storage':
+                case 'get setting':
+                    if (args.length > 0) {
+                        Gurasuraisu._call('getLocalStorageItem', [args[0]]);
                     } else {
-                        appendOutput('Usage: get <storage|setting|brightness|theme|animations|time> <key>', 'output-error');
-                        Gurasuraisu.showPopup('Invalid "get" command usage.');
+                        appendOutput(`Usage: ${cmd} <key>`, 'output-error');
                     }
                     break;
-                case 'set':
-                    if (args[0] === 'storage' && args[1] && args.length >= 3) {
-                        const key = args[1];
-                        const value = args.slice(2).join(' ');
+                case 'get brightness':
+                    Gurasuraisu._call('getLocalStorageItem', ['page_brightness']);
+                    break;
+                case 'get theme':
+                    Gurasuraisu._call('getLocalStorageItem', ['theme']);
+                    break;
+                case 'get animations':
+                    Gurasuraisu._call('getLocalStorageItem', ['animationsEnabled']);
+                    break;
+                case 'get time':
+                    Gurasuraisu._call('getCurrentTimeParent');
+                    break;
+
+                case 'set storage':
+                case 'set setting':
+                    if (args.length >= 2) {
+                        const key = args[0];
+                        const value = args.slice(1).join(' ');
                         Gurasuraisu._call('setLocalStorageItem', [key, value]);
-                    } else if (args[0] === 'setting' && args[1] && args.length >= 3) {
-                        const key = args[1];
-                        const value = args.slice(2).join(' ');
-                        Gurasuraisu._call('setLocalStorageItem', [key, value]);
-                    } else if (args[0] === 'brightness' && args[1]) {
-                        const brightnessValue = parseInt(args[1]);
-                        if (!isNaN(brightnessValue) && brightnessValue >= 0 && brightnessValue <= 100) {
-                            Gurasuraisu._call('setLocalStorageItem', ['page_brightness', brightnessValue.toString()]);
-                        } else {
-                            appendOutput('Invalid brightness value. Must be between 0 and 100.', 'output-error');
-                            Gurasuraisu.showPopup('Invalid brightness value. Must be between 0 and 100.');
-                        }
-                    } else if (args[0] === 'theme' && (args[1] === 'light' || args[1] === 'dark')) {
-                        Gurasuraisu._call('setLocalStorageItem', ['theme', args[1]]);
-                    } else if (args[0] === 'animations' && (args[1] === 'on' || args[1] === 'off')) {
-                        const enabled = args[1] === 'on';
+                    } else {
+                        appendOutput(`Usage: ${cmd} <key> <value>`, 'output-error');
+                    }
+                    break;
+                case 'set brightness':
+                    const brightnessValue = parseInt(args[0]);
+                    if (!isNaN(brightnessValue) && brightnessValue >= 0 && brightnessValue <= 100) {
+                        Gurasuraisu._call('setLocalStorageItem', ['page_brightness', brightnessValue.toString()]);
+                    } else {
+                        appendOutput('Invalid brightness value. Must be between 0 and 100.', 'output-error');
+                    }
+                    break;
+                case 'set theme':
+                    if (args[0] === 'light' || args[0] === 'dark') {
+                        Gurasuraisu._call('setLocalStorageItem', ['theme', args[0]]);
+                    } else {
+                        appendOutput('Usage: set theme <light|dark>', 'output-error');
+                    }
+                    break;
+                case 'set animations':
+                    if (args[0] === 'on' || args[0] === 'off') {
+                        const enabled = args[0] === 'on';
                         Gurasuraisu._call('setLocalStorageItem', ['animationsEnabled', enabled.toString()]);
                     } else {
-                        appendOutput('Usage: set <storage|setting|brightness|theme|animations> <key|value> [value]', 'output-error');
-                        Gurasuraisu.showPopup('Invalid "set" command usage.');
+                        appendOutput('Usage: set animations <on|off>', 'output-error');
                     }
                     break;
-                case 'rm':
-                    if (args[0] === 'storage' && args[1]) {
-                        Gurasuraisu._call('removeLocalStorageItem', [args[1]]);
-                    } else if (args[0] === 'wallpaper' && args[1] !== undefined) {
-                        const index = parseInt(args[1]);
-                        if (!isNaN(index)) {
-                            Gurasuraisu._call('removeWallpaperAtIndex', [index]);
-                        } else {
-                            appendOutput('Invalid wallpaper index. Must be a number.', 'output-error');
-                            Gurasuraisu.showPopup('Invalid wallpaper index. Must be a number.');
-                        }
+
+                case 'rm storage':
+                    if (args.length > 0) {
+                        Gurasuraisu._call('removeLocalStorageItem', [args[0]]);
                     } else {
-                        appendOutput('Usage: rm <storage|wallpaper> <key|index>', 'output-error');
-                        Gurasuraisu.showPopup('Invalid "rm" command usage.');
+                        appendOutput('Usage: rm storage <key>', 'output-error');
                     }
                     break;
-                case 'ls':
-                    if (args[0] === 'storage') {
-                        Gurasuraisu._call('listLocalStorageKeys');
-                    } else if (args[0] === 'wallpapers') {
-                        Gurasuraisu._call('listRecentWallpapers');
+                case 'rm wallpaper':
+                    const rmIndex = parseInt(args[0]);
+                    if (!isNaN(rmIndex)) {
+                        Gurasuraisu._call('removeWallpaperAtIndex', [rmIndex]);
                     } else {
-                        appendOutput('Usage: ls <storage|wallpapers>', 'output-error');
-                        Gurasuraisu.showPopup('Invalid "ls" command usage.');
+                        appendOutput('Invalid wallpaper index. Must be a number.', 'output-error');
                     }
                     break;
-                case 'list':
-                    if (args[0] === 'settings') {
-                        Gurasuraisu._call('listCommonSettings');
-                    } else if (args[0] === 'apps') {
-                        Gurasuraisu.requestInstalledApps();
-                    } else {
-                        appendOutput('Usage: list <settings|apps>', 'output-error');
-                        Gurasuraisu.showPopup('Invalid "list" command usage.');
-                    }
+
+                case 'ls storage':
+                    Gurasuraisu._call('listLocalStorageKeys');
                     break;
-                case 'open':
-                    if (args[0] === 'app' && args[1]) {
-                        Gurasuraisu.openApp(args[1]);
-                        appendOutput(`Attempting to open app: ${args[1]}`, 'output-info');
-                        Gurasuraisu.showNotification(`Opening: ${args[1]}`, { icon: 'apps' });
+                case 'ls wallpapers':
+                    Gurasuraisu._call('listRecentWallpapers');
+                    break;
+
+                case 'list apps':
+                    Gurasuraisu.requestInstalledApps();
+                    break;
+                case 'list settings':
+                    Gurasuraisu._call('listCommonSettings');
+                    break;
+
+                case 'open app':
+                    if (args.length > 0) {
+                        Gurasuraisu.openApp(args[0]);
+                        appendOutput(`Attempting to open app: ${args[0]}`, 'output-info');
                     } else {
                         appendOutput('Usage: open app <url>', 'output-error');
-                        Gurasuraisu.showPopup('Invalid "open app" command usage.');
                     }
                     break;
-                case 'show':
-                    if (args[0] === 'popup' && args.length > 1) {
-                        const message = args.slice(1).join(' ');
-                        Gurasuraisu.showPopup(message);
-                        appendOutput(`Popup sent: '${message}'`, 'output-info');
-                    } else if (args[0] === 'notification' && args.length > 1) {
-                        const message = args.slice(1).join(' ');
-                        Gurasuraisu.showNotification(message, { icon: 'info' });
-                        appendOutput(`Notification sent: '${message}'`, 'output-info');
+
+                case 'show popup':
+                case 'show notification':
+                    if (args.length > 0) {
+                        const message = args.join(' ');
+                        const isPopup = cmd.includes('popup');
+                        if (isPopup) {
+                            Gurasuraisu.showPopup(message);
+                            appendOutput(`Popup sent: '${message}'`, 'output-info');
+                        } else {
+                            Gurasuraisu.showNotification(message, { icon: 'info' });
+                            appendOutput(`Notification sent: '${message}'`, 'output-info');
+                        }
                     } else {
-                        appendOutput('Usage: show <popup|notification> <message>', 'output-error');
-                        Gurasuraisu.showPopup('Invalid "show" command usage.');
+                        appendOutput(`Usage: ${cmd} <message>`, 'output-error');
                     }
                     break;
+                
                 case 'minimize':
                     Gurasuraisu.minimize();
-                    appendOutput('Terminal Gurapp minimized.', 'output-info');
-                    Gurasuraisu.showNotification('Terminal minimized.', { icon: 'unfold_less' });
                     break;
                 case 'blackout':
                     Gurasuraisu.blackout();
-                    appendOutput('Gurasuraisu screen blacked out.', 'output-info');
-                    Gurasuraisu.showNotification('Screen blacked out.', { icon: 'power_settings_new' });
                     break;
-                case 'install':
+                case 'reboot':
+                    Gurasuraisu._call('rebootGurasuraisu');
+                    break;
+                
+                case 'pwa install':
+                    Gurasuraisu._call('promptPWAInstall');
+                    appendOutput('PWA installation prompt sent (if available).', 'output-info');
+                    break;
+
+                case 'switch wallpaper':
+                     if (args.length > 0) {
+                        Gurasuraisu._call('switchWallpaperParent', [args[0]]);
+                    } else {
+                        appendOutput('Usage: switch wallpaper <left|right|index>', 'output-error');
+                    }
+                    break;
+
+                case 'delete app':
+                    if (args.length > 0) {
+                        Gurasuraisu.deleteApp(args[0]); // Parent handles confirmation
+                        appendOutput(`Deletion request sent for '${args[0]}'.`, 'output-info');
+                    } else {
+                        appendOutput('Usage: delete app <name>', 'output-error');
+                    }
+                    break;
+                    
+                // --- Privileged Commands ---
+                case 'install app':
+                case 'run':
+                    const isInstall = cmd === 'install app';
+                    const commandName = isInstall ? 'install' : 'run';
+
                     if (!arePrivilegedCommandsUnlocked) {
                         if (!privilegedChallengeState.question) {
                             const num1 = Math.floor(Math.random() * 20) + 1;
@@ -421,84 +481,46 @@
                             privilegedChallengeState.question = `What is ${num1} + ${num2}?`;
                             privilegedChallengeState.answer = (num1 + num2).toString();
                         }
-                        appendOutput('WARNING: The "install" command is privileged and can add malicious apps to your system.', 'output-error');
+                        appendOutput(`WARNING: The "${commandName}" command is privileged and can be dangerous.`, 'output-error');
                         appendOutput('To prevent accidental use, please solve the following challenge:', 'output-info');
                         appendOutput(`CHALLENGE: ${privilegedChallengeState.question}`, 'output-info');
                         appendOutput('Unlock by typing: unlock <your_answer>', 'output-info');
-                        Gurasuraisu.showPopup('The "install" command is protected.');
                         break;
                     }
-
-                    if (args[0] === 'app' && args.length >= 4) {
-                        const appName = args[1];
-                        const appUrl = args[2];
-                        const iconUrl = args[3];
-                        const appData = {
-                            name: appName,
-                            url: appUrl,
-                            iconUrl: iconUrl,
-                            filesToCache: [appUrl, iconUrl] // Simplistic caching for demo
-                        };
-                        Gurasuraisu.installApp(appData);
-                        appendOutput(`Installation request sent for '${appName}'.`, 'output-info');
-                    } else {
-                        appendOutput('Usage: install app <name> <url> <iconUrl>', 'output-error');
-                        Gurasuraisu.showPopup('Invalid "install app" command usage.');
+                    
+                    if (isInstall) {
+                        if (args.length >= 3) {
+                            const appData = { name: args[0], url: args[1], iconUrl: args[2], filesToCache: [args[1], args[2]] };
+                            Gurasuraisu.installApp(appData);
+                            appendOutput(`Installation request sent for '${args[0]}'.`, 'output-info');
+                        } else {
+                            appendOutput('Usage: install app <name> <url> <iconUrl>', 'output-error');
+                        }
+                    } else { // 'run' command
+                        if (args.length > 0) {
+                            const code = args.join(' ');
+                            Gurasuraisu._call('executeParentJS', [code]);
+                            appendOutput(`Executing JS in parent: '${code}'`, 'output-info');
+                        } else {
+                            appendOutput('Usage: run <javascript_code>', 'output-error');
+                        }
                     }
                     break;
-                case 'delete':
-                    if (args[0] === 'app' && args[1]) {
-                        const appName = args[1];
-                        Gurasuraisu.deleteApp(appName); // Parent handles confirmation
-                        appendOutput(`Deletion request sent for '${appName}'.`, 'output-info');
-                    } else {
-                        appendOutput('Usage: delete app <name>', 'output-error');
-                        Gurasuraisu.showPopup('Invalid "delete app" command usage.');
-                    }
-                    break;
-                case 'switch':
-                    if (args[0] === 'wallpaper' && args[1]) {
-                        const directionOrIndex = args[1];
-                        Gurasuraisu._call('switchWallpaperParent', [directionOrIndex]);
-                    } else {
-                        appendOutput('Usage: switch wallpaper <left|right|index>', 'output-error');
-                        Gurasuraisu.showPopup('Invalid "switch wallpaper" command usage.');
-                    }
-                    break;
-                case 'reboot':
-                    // Parent will handle confirmation
-                    Gurasuraisu._call('rebootGurasuraisu');
-                    break;
-                case 'pwa':
-                    if (args[0] === 'install') {
-                        Gurasuraisu._call('promptPWAInstall');
-                        appendOutput('PWA installation prompt sent (if available).', 'output-info');
-                        Gurasuraisu.showNotification('PWA install prompt sent.', { icon: 'install_desktop' });
-                    } else {
-                        appendOutput('Usage: pwa install', 'output-error');
-                        Gurasuraisu.showPopup('Invalid "pwa" command usage.');
-                    }
-                    break;
+                
                 case 'unlock':
                     if (args[0] !== undefined) {
                         if (!privilegedChallengeState.answer) {
-                            appendOutput('No active challenge. Try running a privileged command first.', 'output-error');
+                            appendOutput('No active challenge. Try a privileged command first.', 'output-error');
                             break;
                         }
-                        const userAnswer = args[0].toString();
-                        if (userAnswer === privilegedChallengeState.answer) {
+                        if (args[0].toString() === privilegedChallengeState.answer) {
                             arePrivilegedCommandsUnlocked = true;
-                            appendOutput('Privileged commands are now unlocked for 10 minutes.', 'output-success');
-                            
+                            appendOutput('Privileged commands unlocked for 10 minutes.', 'output-success');
                             if (privilegedCommandsTimeout) clearTimeout(privilegedCommandsTimeout);
-
                             privilegedCommandsTimeout = setTimeout(() => {
                                 arePrivilegedCommandsUnlocked = false;
-                                privilegedCommandsTimeout = null;
-                                appendOutput('Access to privileged commands has expired and is now locked.', 'output-info');
-                                Gurasuraisu.showPopup('Privileged command access has expired.');
-                            }, 10 * 60 * 1000); // 10 minutes
-
+                                appendOutput('Access to privileged commands has expired.', 'output-info');
+                            }, 10 * 60 * 1000);
                             privilegedChallengeState = { question: null, answer: null };
                         } else {
                             appendOutput('Try again. The challenge has been reset.', 'output-error');
@@ -508,34 +530,10 @@
                         appendOutput('Usage: unlock <answer>', 'output-error');
                     }
                     break;
-                case 'run':
-                    if (!arePrivilegedCommandsUnlocked) {
-                        if (!privilegedChallengeState.question) {
-                            const num1 = Math.floor(Math.random() * 20) + 1;
-                            const num2 = Math.floor(Math.random() * 20) + 1;
-                            privilegedChallengeState.question = `What is ${num1} + ${num2}?`;
-                            privilegedChallengeState.answer = (num1 + num2).toString();
-                        }
-                        appendOutput('WARNING: The "run" command is highly privileged and can compromise your Gurasuraisu data if misused.', 'output-error');
-                        appendOutput('To prevent accidental use, please solve the following challenge:', 'output-info');
-                        appendOutput(`CHALLENGE: ${privilegedChallengeState.question}`, 'output-info');
-                        appendOutput('Unlock by typing: unlock <your_answer>', 'output-info');
-                        Gurasuraisu.showPopup('The "run" command is protected.');
-                        break;
-                    }
 
-                    if (args.length > 0) {
-                        const code = args.join(' ');
-                        Gurasuraisu._call('executeParentJS', [code]);
-                        appendOutput(`Executing JS in parent: '${code}'`, 'output-info');
-                    } else {
-                        appendOutput('Usage: run <javascript_code>', 'output-error');
-                        Gurasuraisu.showPopup('Usage: run <javascript_code>');
-                    }
-                    break;
                 default:
-                    appendOutput(`Unknown command: ${command}. Type 'help' for a list of commands.`, 'output-error');
-                    Gurasuraisu.showPopup(`Unknown command: ${command}.`);
+                    appendOutput(`Unknown command: ${rawParts.join(' ')}. Type 'help' for a list.`, 'output-error');
+                    break;
             }
         }
 
