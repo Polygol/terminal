@@ -224,7 +224,7 @@
         function appendPrompt(command) {
             const line = document.createElement('div');
             line.className = 'output-line output-prompt';
-            line.innerText = `command $ ${command}`;
+            line.innerText = `cmd> ${command}`;
             outputDiv.appendChild(line);
             outputDiv.scrollTop = outputDiv.scrollHeight;
         }
