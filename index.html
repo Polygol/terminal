@@ -279,7 +279,19 @@
                     }
                     break;
                 case 'clear':
-                    outputDiv.innerHTML = '';
+                    if (args.length === 0) {
+                        // No arguments, just clear the terminal output
+                        outputDiv.innerHTML = '';
+                    } else if (args[0] === 'storage') {
+                        // Parent will handle confirmation
+                        Gurasuraisu._call('clearLocalStorage');
+                    } else if (args[0] === 'wallpapers') {
+                        // Parent will handle confirmation
+                        Gurasuraisu._call('clearAllWallpapers');
+                    } else {
+                        appendOutput('Usage: clear [storage|wallpapers]', 'output-error');
+                        Gurasuraisu.showPopup('Invalid "clear" command usage.');
+                    }
                     break;
                 case 'get':
                     if (args[0] === 'storage' && args[1]) {
@@ -350,18 +362,6 @@
                     } else {
                         appendOutput('Usage: ls <storage|wallpapers>', 'output-error');
                         Gurasuraisu.showPopup('Invalid "ls" command usage.');
-                    }
-                    break;
-                case 'clear':
-                    if (args[0] === 'storage') {
-                        // Parent will handle confirmation
-                        Gurasuraisu._call('clearLocalStorage');
-                    } else if (args[0] === 'wallpapers') {
-                        // Parent will handle confirmation
-                        Gurasuraisu._call('clearAllWallpapers');
-                    } else {
-                        appendOutput('Usage: clear <storage|wallpapers>', 'output-error');
-                        Gurasuraisu.showPopup('Invalid "clear" command usage.');
                     }
                     break;
                 case 'list':
@@ -598,12 +598,6 @@
                         break;
                 }
             }
-        });
-
-        // Initialize theme and animations on load based on parent's state
-        document.addEventListener('DOMContentLoaded', () => {
-            // This is automatically handled by gurasuraisu-api.js for theme and animations.
-            // No explicit call needed here.
         });
     </script>
 </body>
