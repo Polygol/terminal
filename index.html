@@ -480,12 +480,12 @@
                     }
                     break;
                 case 'unlock':
-                    if (args[0] === 'run' && args[1] !== undefined) {
+                    if (args[0] !== undefined) {
                         if (!privilegedChallengeState.answer) {
                             appendOutput('No active challenge. Try running a privileged command first.', 'output-error');
                             break;
                         }
-                        const userAnswer = args[1].toString();
+                        const userAnswer = args[0].toString();
                         if (userAnswer === privilegedChallengeState.answer) {
                             arePrivilegedCommandsUnlocked = true;
                             appendOutput('Privileged commands are now unlocked for 10 minutes.', 'output-success');
@@ -519,7 +519,7 @@
                         appendOutput('WARNING: The "run" command is highly privileged and can compromise your Gurasuraisu data if misused.', 'output-error');
                         appendOutput('To prevent accidental use, please solve the following challenge:', 'output-info');
                         appendOutput(`CHALLENGE: ${privilegedChallengeState.question}`, 'output-info');
-                        appendOutput('Unlock by typing: unlock run <your_answer>', 'output-info');
+                        appendOutput('Unlock by typing: unlock <your_answer>', 'output-info');
                         Gurasuraisu.showPopup('The "run" command is protected.');
                         break;
                     }
