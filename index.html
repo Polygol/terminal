@@ -12,6 +12,8 @@
     <style>
         /* Inherit Gurasuraisu theme variables directly */
         :root {
+            --edge-refraction-filter: url('#edge-refraction-only');
+
             /* Default to Dark Theme variables (inherited from Gurasuraisu parent) */
             /* These are fallbacks if run standalone, Gurasuraisu will provide them */
             --background-color-dark: #1c1c1c;
@@ -130,8 +132,7 @@
             border-radius: 25px; /* More rounded for input */
             background-color: var(--gurapp-input-bg);
             padding: 10px 15px;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(5px) var(--edge-refraction-filter);
             transition: background-color 0.3s, border-color 0.3s;
             margin-bottom: 4px;
         }
@@ -200,6 +201,32 @@
     </style>
 </head>
 <body data-app-name="Terminal">
+        <svg style="display: none">
+        <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
+            <!-- Part 1: Create the turbulence that will only be used at the edges -->
+            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"/>
+        
+            <!-- Part 2: Create a mask that is only opaque at the edges -->
+            <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"/>
+            <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"/>
+            <feComposite in="turbulence" in2="border_mask" operator="in" result="edge_turbulence"/>
+        
+            <!-- Part 3: Create the final displacement map -->
+            <!-- First, create the 50% gray neutral background -->
+            <feFlood flood-color="#808080" result="neutral_base"/>
+            
+            <!-- Next, use feMerge to explicitly stack the edge turbulence ON TOP of the gray base.
+                 This is the key step that prevents the center from shifting. -->
+            <feMerge result="displacement_map">
+                <feMergeNode in="neutral_base"/>
+                <feMergeNode in="edge_turbulence"/>
+            </feMerge>
+        
+            <!-- Part 4: Apply the final, perfectly centered displacement map -->
+            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="40" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+    </svg>
+    
     <div id="terminal-output"></div>
     <div class="terminal-input-container">
         <span class="terminal-prompt">CMD></span>
