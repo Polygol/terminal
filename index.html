@@ -17,6 +17,7 @@
             /* Default to Dark Theme variables (inherited from Gurasuraisu parent) */
             /* These are fallbacks if run standalone, Gurasuraisu will provide them */
             --background-color-dark: #1c1c1c;
+            --background-color-dark-tr: rgba(28, 28, 28, 0.5);
             --text-color-dark: #f9f9f9;
             --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
             --modal-background-dark: rgba(51, 51, 51, 0.8);
@@ -26,6 +27,7 @@
 
             /* Light Theme variables (inherited from Gurasuraisu parent) */
             --background-color-light: #f0f0f0;
+            --background-color-light-tr: rgba(240, 240, 240, 0.5);
             --text-color-light: #333333;
             --secondary-text-color-light: rgba(0, 0, 0, 0.7);
             --modal-background-light: rgba(220, 220, 220, 0.8);
@@ -50,6 +52,7 @@
         /* Default to Dark Theme colors */
         body {
             --gurapp-background: var(--background-color-dark);
+            --gurapp-background-tr: var(--background-color-dark-tr);
             --gurapp-text-primary: var(--text-color-dark);
             --gurapp-text-secondary: var(--secondary-text-color-dark);
             --gurapp-glass-bg: var(--modal-transparent-dark);
@@ -64,6 +67,7 @@
         /* Light Theme overrides for terminal */
         body.light-theme {
             --gurapp-background: var(--background-color-light);
+            --gurapp-background-tr: var(--background-color-light-tr);
             --gurapp-text-primary: var(--text-color-light);
             --gurapp-text-secondary: var(--secondary-text-color-light);
             --gurapp-glass-bg: var(--modal-transparent-light);
@@ -87,7 +91,7 @@
 
         body {
             font-family: 'Roboto Mono', monospace; /* Keep monospace for terminal content */
-            background-color: var(--gurapp-background);
+            background-color: var(--gurapp-background-tr);
             color: var(--gurapp-text-primary);
             padding: 20px;
             display: flex;
