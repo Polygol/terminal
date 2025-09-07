@@ -13,6 +13,7 @@
         /* Inherit Gurasuraisu theme variables directly */
         :root {
             --edge-refraction-filter: url('#edge-refraction-only');
+            --sun-shadow: 0 0 0 0 transparent;
 
             /* Default to Dark Theme variables (inherited from Gurasuraisu parent) */
             /* These are fallbacks if run standalone, Gurasuraisu will provide them */
@@ -137,6 +138,7 @@
             background-color: var(--gurapp-input-bg);
             padding: 10px 15px;
             backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+            box-shadow: var(--sun-shadow);
             transition: background-color 0.3s, border-color 0.3s;
             margin-bottom: 4px;
         }
