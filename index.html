@@ -766,7 +766,9 @@
                             appendOutput('Recent Wallpapers:', 'output-info');
                             data.wallpapers.forEach((wp, index) => {
                                 const typeInfo = wp.isSlideshow ? 'Slideshow' : `Type: ${wp.type}`;
-                                appendOutput(`- [${index}] ${typeInfo}`);
+                                // Add the wallpaper's ID to the output if it exists
+                                const idInfo = wp.id ? ` | ID: ${wp.id}` : '';
+                                appendOutput(`- [${index}] ${typeInfo}${idInfo}`);
                             });
                         } else {
                             appendOutput('No recent wallpapers found.', 'output-info');
