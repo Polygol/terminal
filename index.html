@@ -402,14 +402,23 @@
                     }
                     break;
                 case 'set idb':
+                    // Robust JSON parsing
                     if (args.length >= 3) {
                         const dbName = args[0];
                         const storeName = args[1];
                         const key = args[2];
-                        const jsonData = args.slice(3).join(' ');
-                        // Attempt to parse key as a number if it looks like one, otherwise keep as string
-                        const finalKey = isNaN(Number(key)) ? key : Number(key);
-                        Gurasuraisu.setIDBRecord(dbName, storeName, finalKey, jsonData);
+                        
+                        // Find where the JSON data starts in the original command
+                        const keyIndex = command.indexOf(key);
+                        const jsonStartIndex = command.indexOf('{', keyIndex + key.length);
+    
+                        if (jsonStartIndex > -1) {
+                            const jsonData = command.substring(jsonStartIndex);
+                            const finalKey = isNaN(Number(key)) ? key : Number(key);
+                            Gurasuraisu.setIDBRecord(dbName, storeName, finalKey, jsonData);
+                        } else {
+                            appendOutput('Invalid command format. JSON data must start with {', 'output-error');
+                        }
                     } else {
                         appendOutput('Usage: set idb <dbName> <storeName> <key> <jsonData>', 'output-error');
                     }
@@ -609,9 +618,19 @@
                         }
                     } else if (cmd === 'set idb') {
                         if (args.length >= 3) {
+                            const dbName = args[0];
+                            const storeName = args[1];
                             const key = args[2];
-                            const finalKey = isNaN(Number(key)) ? key : Number(key);
-                            Gurasuraisu.setIDBRecord(args[0], args[1], finalKey, args.slice(3).join(' '));
+                            const keyIndex = command.indexOf(key);
+                            const jsonStartIndex = command.indexOf('{', keyIndex + key.length);
+    
+                            if (jsonStartIndex > -1) {
+                                const jsonData = command.substring(jsonStartIndex);
+                                const finalKey = isNaN(Number(key)) ? key : Number(key);
+                                Gurasuraisu.setIDBRecord(dbName, storeName, finalKey, jsonData);
+                            } else {
+                                appendOutput('Invalid command format. JSON data must start with {', 'output-error');
+                            }
                         } else {
                             appendOutput('Usage: set idb <dbName> <storeName> <key> <jsonData>', 'output-error');
                         }
