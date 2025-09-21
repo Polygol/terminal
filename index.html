@@ -285,6 +285,12 @@
             'rm storage <key>': 'Removes a key from Gurasuraisu localStorage.',
             'ls storage': 'Lists all keys in Gurasuraisu localStorage.',
             'clear storage': 'Clears all Gurasuraisu localStorage data (requires confirmation in parent).',
+            'ls idb': 'Lists all IndexedDB database names.',
+            'ls idb <dbName>': 'Lists all Object Stores in a specific database.',
+            'get idb <dbName> <storeName> [key]': 'Reads all records or a specific record from an Object Store.',
+            'set idb <dbName> <storeName> <jsonData>': 'Writes/updates a record in an Object Store (privileged).',
+            'rm idb <dbName> <storeName> <key>': 'Deletes a record from an Object Store by its key (privileged).',
+            'clear idb <dbName> <storeName>': 'Clears all records from an Object Store (privileged).',
             'get setting <key>': 'Retrieves a Gurasuraisu setting value (from localStorage).',
             'set setting <key> <value>': 'Sets a Gurasuraisu setting value.',
             'list settings': 'Lists common Gurasuraisu settings.',
@@ -322,20 +328,21 @@
             let args = rawParts.slice(1);
 
             // List of commands that can have a second word to form a multi-word command
-            const multiWordBases = ['get', 'set', 'rm', 'ls', 'list', 'open', 'show', 'delete', 'switch', 'install', 'pwa'];
+            const multiWordBases = ['get', 'set', 'rm', 'ls', 'list', 'open', 'show', 'delete', 'switch', 'install', 'pwa', 'clear'];
             
             if (multiWordBases.includes(cmd) && args.length > 0) {
                 // Form a potential multi-word command, e.g., "get storage"
                 const potentialCmd = `${cmd} ${args[0]}`;
                 // Check against a list of valid multi-word commands
                 const validMultiWordCommands = [
-                    'get storage', 'get setting', 'get brightness', 'get theme', 'get animations', 'get time',
-                    'set storage', 'set setting', 'set brightness', 'set theme', 'set animations',
-                    'rm storage', 'rm wallpaper',
-                    'ls storage', 'ls wallpapers',
+                    'get storage', 'get setting', 'get brightness', 'get theme', 'get animations', 'get time', 'get idb',
+                    'set storage', 'set setting', 'set brightness', 'set theme', 'set animations', 'set idb',
+                    'rm storage', 'rm wallpaper', 'rm idb',
+                    'ls storage', 'ls wallpapers', 'ls idb',
                     'list settings', 'list apps',
                     'open app', 'show popup', 'show notification',
-                    'delete app', 'switch wallpaper', 'install app', 'pwa install'
+                    'delete app', 'switch wallpaper', 'install app', 'pwa install',
+                    'clear storage', 'clear wallpapers', 'clear idb'
                 ];
                 
                 if (validMultiWordCommands.includes(potentialCmd)) {
@@ -366,7 +373,14 @@
                         Gurasuraisu.showPopup('Invalid "clear" command usage.');
                     }
                     break;
-
+                case 'clear idb':
+                    if (args.length === 2) {
+                        Gurasuraisu.clearIDBStore(args[0], args[1]);
+                    } else {
+                        appendOutput('Usage: clear idb <dbName> <storeName>', 'output-error');
+                    }
+                    break;
+                    
                 // --- Multi-word commands ---
                 case 'get storage':
                 case 'get setting':
@@ -376,6 +390,45 @@
                         appendOutput(`Usage: ${cmd} <key>`, 'output-error');
                     }
                     break;
+                case 'get idb':
+                    if (args.length === 2) { // get idb dbName storeName
+                        Gurasuraisu.getIDBRecord(args[0], args[1], null); // null key gets all
+                    } else if (args.length === 3) { // get idb dbName storeName key
+                        // Keys can be numbers, so we try to parse them
+                        const key = isNaN(parseInt(args[2])) ? args[2] : parseInt(args[2]);
+                        Gurasuraisu.getIDBRecord(args[0], args[1], key);
+                    } else {
+                        appendOutput('Usage: get idb <dbName> <storeName> [key]', 'output-error');
+                    }
+                    break;
+                case 'set idb':
+                    if (args.length >= 3) {
+                        const dbName = args[0];
+                        const storeName = args[1];
+                        const jsonData = args.slice(2).join(' ');
+                        Gurasuraisu.setIDBRecord(dbName, storeName, jsonData);
+                    } else {
+                        appendOutput('Usage: set idb <dbName> <storeName> <jsonData>', 'output-error');
+                    }
+                case 'rm idb':
+                    if (args.length === 3) {
+                        const key = isNaN(parseInt(args[2])) ? args[2] : parseInt(args[2]);
+                        Gurasuraisu.removeIDBRecord(args[0], args[1], key);
+                    } else {
+                        appendOutput('Usage: rm idb <dbName> <storeName> <key>', 'output-error');
+                    }
+                    break;
+                case 'ls storage':
+                    Gurasuraisu._call('listLocalStorageKeys');
+                    break;
+                case 'ls idb':
+                     if (args.length === 0) {
+                        Gurasuraisu.listIDBDatabases();
+                    } else if (args.length === 1) {
+                        Gurasuraisu.listIDBStores(args[0]);
+                    } else {
+                        appendOutput('Usage: ls idb [dbName]', 'output-error');
+                    }
                 case 'get brightness':
                     Gurasuraisu._call('getLocalStorageItem', ['page_brightness']);
                     break;
@@ -514,6 +567,9 @@
                 // --- Privileged Commands ---
                 case 'install app':
                 case 'run':
+                case 'set idb':
+                case 'rm idb':
+                case 'clear idb':
                     const isInstall = cmd === 'install app';
                     const commandName = isInstall ? 'install' : 'run';
 
@@ -538,14 +594,27 @@
                             appendOutput(`Installation request sent for '${args[0]}'.`, 'output-info');
                         } else {
                             appendOutput('Usage: install app <name> <url> <iconUrl>', 'output-error');
-                        }
-                    } else { // 'run' command
-                        if (args.length > 0) {
-                            const code = args.join(' ');
-                            Gurasuraisu._call('executeParentJS', [code]);
-                            appendOutput(`Executing JS in parent: '${code}'`, 'output-info');
-                        } else {
-                            appendOutput('Usage: run <javascript_code>', 'output-error');
+                        } else if (cmd === 'run') { // 'run' command
+                            if (args.length > 0) {
+                                const code = args.join(' ');
+                                Gurasuraisu._call('executeParentJS', [code]);
+                                appendOutput(`Executing JS in parent: '${code}'`, 'output-info');
+                            } else {
+                                appendOutput('Usage: run <javascript_code>', 'output-error');
+                            }
+                        } else if (cmd === 'set idb') {
+                            if (args.length >= 3) {
+                                Gurasuraisu.setIDBRecord(args[0], args[1], args.slice(2).join(' '));
+                            } else { appendOutput('Usage: set idb <dbName> <storeName> <jsonData>', 'output-error'); }
+                        } else if (cmd === 'rm idb') {
+                             if (args.length === 3) {
+                                const key = isNaN(parseInt(args[2])) ? args[2] : parseInt(args[2]);
+                                Gurasuraisu.removeIDBRecord(args[0], args[1], key);
+                            } else { appendOutput('Usage: rm idb <dbName> <storeName> <key>', 'output-error'); }
+                        } else if (cmd === 'clear idb') {
+                            if (args.length === 2) {
+                                Gurasuraisu.clearIDBStore(args[0], args[1]);
+                            } else { appendOutput('Usage: clear idb <dbName> <storeName>', 'output-error'); }
                         }
                     }
                     break;
@@ -634,6 +703,38 @@
                             data.keys.forEach(key => appendOutput(`- ${key}`));
                         } else {
                             appendOutput('No Gurasuraisu LocalStorage keys found.', 'output-info');
+                        }
+                        break;
+                    case 'idbDatabasesList':
+                        if (data.dbs && data.dbs.length > 0) {
+                            appendOutput('IndexedDB Databases:', 'output-info');
+                            data.dbs.forEach(name => appendOutput(`- ${name}`));
+                        } else {
+                            appendOutput('No IndexedDB databases found.', 'output-info');
+                        }
+                        break;
+                    case 'idbStoresList':
+                        if (data.stores && data.stores.length > 0) {
+                            appendOutput(`Object Stores in '${data.dbName}':`, 'output-info');
+                            data.stores.forEach(name => appendOutput(`- ${name}`));
+                        } else {
+                            appendOutput(`No Object Stores found in '${data.dbName}'.`, 'output-info');
+                        }
+                        break;
+                    case 'idbRecordValue':
+                        const value = data.value;
+                        if (value === undefined) {
+                            appendOutput(`No record found for key '${data.key}' in '${data.dbName}/${data.storeName}'.`, 'output-info');
+                        } else if (Array.isArray(value)) {
+                             appendOutput(`All records from '${data.dbName}/${data.storeName}':`, 'output-info');
+                             if (value.length === 0) {
+                                 appendOutput('(Store is empty)');
+                             } else {
+                                value.forEach(item => appendOutput(JSON.stringify(item, null, 2)));
+                             }
+                        } else {
+                             appendOutput(`Record from '${data.dbName}/${data.storeName}' for key '${data.key}':`, 'output-info');
+                             appendOutput(JSON.stringify(value, null, 2));
                         }
                         break;
                     case 'commonSettingsList':
