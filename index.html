@@ -405,11 +405,15 @@
                     if (args.length >= 3) {
                         const dbName = args[0];
                         const storeName = args[1];
-                        const jsonData = args.slice(2).join(' ');
-                        Gurasuraisu.setIDBRecord(dbName, storeName, jsonData);
+                        const key = args[2];
+                        const jsonData = args.slice(3).join(' ');
+                        // Attempt to parse key as a number if it looks like one, otherwise keep as string
+                        const finalKey = isNaN(Number(key)) ? key : Number(key);
+                        Gurasuraisu.setIDBRecord(dbName, storeName, finalKey, jsonData);
                     } else {
-                        appendOutput('Usage: set idb <dbName> <storeName> <jsonData>', 'output-error');
+                        appendOutput('Usage: set idb <dbName> <storeName> <key> <jsonData>', 'output-error');
                     }
+                    break;
                 case 'rm idb':
                     if (args.length === 3) {
                         const key = isNaN(parseInt(args[2])) ? args[2] : parseInt(args[2]);
@@ -605,13 +609,15 @@
                         }
                     } else if (cmd === 'set idb') {
                         if (args.length >= 3) {
-                            Gurasuraisu.setIDBRecord(args[0], args[1], args.slice(2).join(' '));
+                            const key = args[2];
+                            const finalKey = isNaN(Number(key)) ? key : Number(key);
+                            Gurasuraisu.setIDBRecord(args[0], args[1], finalKey, args.slice(3).join(' '));
                         } else {
-                            appendOutput('Usage: set idb <dbName> <storeName> <jsonData>', 'output-error');
+                            appendOutput('Usage: set idb <dbName> <storeName> <key> <jsonData>', 'output-error');
                         }
                     } else if (cmd === 'rm idb') {
                         if (args.length === 3) {
-                            const key = isNaN(parseInt(args[2])) ? args[2] : parseInt(args[2]);
+                            const key = isNaN(Number(args[2])) ? args[2] : Number(args[2]);
                             Gurasuraisu.removeIDBRecord(args[0], args[1], key);
                         } else {
                             appendOutput('Usage: rm idb <dbName> <storeName> <key>', 'output-error');
