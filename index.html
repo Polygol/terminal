@@ -594,27 +594,33 @@
                             appendOutput(`Installation request sent for '${args[0]}'.`, 'output-info');
                         } else {
                             appendOutput('Usage: install app <name> <url> <iconUrl>', 'output-error');
-                        } else if (cmd === 'run') { // 'run' command
-                            if (args.length > 0) {
-                                const code = args.join(' ');
-                                Gurasuraisu._call('executeParentJS', [code]);
-                                appendOutput(`Executing JS in parent: '${code}'`, 'output-info');
-                            } else {
-                                appendOutput('Usage: run <javascript_code>', 'output-error');
-                            }
-                        } else if (cmd === 'set idb') {
-                            if (args.length >= 3) {
-                                Gurasuraisu.setIDBRecord(args[0], args[1], args.slice(2).join(' '));
-                            } else { appendOutput('Usage: set idb <dbName> <storeName> <jsonData>', 'output-error'); }
-                        } else if (cmd === 'rm idb') {
-                             if (args.length === 3) {
-                                const key = isNaN(parseInt(args[2])) ? args[2] : parseInt(args[2]);
-                                Gurasuraisu.removeIDBRecord(args[0], args[1], key);
-                            } else { appendOutput('Usage: rm idb <dbName> <storeName> <key>', 'output-error'); }
-                        } else if (cmd === 'clear idb') {
-                            if (args.length === 2) {
-                                Gurasuraisu.clearIDBStore(args[0], args[1]);
-                            } else { appendOutput('Usage: clear idb <dbName> <storeName>', 'output-error'); }
+                        }
+                    } else if (cmd === 'run') {
+                        if (args.length > 0) {
+                            const code = args.join(' ');
+                            Gurasuraisu._call('executeParentJS', [code]);
+                            appendOutput(`Executing JS in parent: '${code}'`, 'output-info');
+                        } else {
+                            appendOutput('Usage: run <javascript_code>', 'output-error');
+                        }
+                    } else if (cmd === 'set idb') {
+                        if (args.length >= 3) {
+                            Gurasuraisu.setIDBRecord(args[0], args[1], args.slice(2).join(' '));
+                        } else {
+                            appendOutput('Usage: set idb <dbName> <storeName> <jsonData>', 'output-error');
+                        }
+                    } else if (cmd === 'rm idb') {
+                        if (args.length === 3) {
+                            const key = isNaN(parseInt(args[2])) ? args[2] : parseInt(args[2]);
+                            Gurasuraisu.removeIDBRecord(args[0], args[1], key);
+                        } else {
+                            appendOutput('Usage: rm idb <dbName> <storeName> <key>', 'output-error');
+                        }
+                    } else if (cmd === 'clear idb') {
+                        if (args.length === 2) {
+                            Gurasuraisu.clearIDBStore(args[0], args[1]);
+                        } else {
+                            appendOutput('Usage: clear idb <dbName> <storeName>', 'output-error');
                         }
                     }
                     break;
