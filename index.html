@@ -136,7 +136,7 @@
             border-radius: 25px; /* More rounded for input */
             background-color: var(--gurapp-input-bg);
             padding: 10px 15px;
-            backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
             box-shadow: var(--sun-shadow);
             transition: background-color 0.3s, border-color 0.3s;
             margin-bottom: 4px;
@@ -229,10 +229,10 @@
         
             <!-- Part 5: Apply the displacement twice and combine the results. -->
             <!-- Pass 1: A positive scale refracts the top and left edges inward correctly. -->
-            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="30" xChannelSelector="R" yChannelSelector="G" result="disp_positive"></feDisplacementMap>
+            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="15" xChannelSelector="R" yChannelSelector="G" result="disp_positive"></feDisplacementMap>
             
             <!-- Pass 2: A negative scale refracts the bottom and right edges inward correctly. -->
-            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="-30" xChannelSelector="R" yChannelSelector="G" result="disp_negative"></feDisplacementMap>
+            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="-15" xChannelSelector="R" yChannelSelector="G" result="disp_negative"></feDisplacementMap>
             
             <!-- Part 6: Blend the two results. The 'lighten' mode takes the non-transparent pixels
                  from both passes. Since the "incorrect" refractions are pushed into transparent
@@ -279,20 +279,20 @@
         const commands = {
             'help': 'Shows this help message.',
             'clear': 'Clears the terminal output.',
-            'get storage <key>': 'Retrieves a value from Gurasuraisu localStorage.',
-            'set storage <key> <value>': 'Sets a value in Gurasuraisu localStorage.',
-            'rm storage <key>': 'Removes a key from Gurasuraisu localStorage.',
-            'ls storage': 'Lists all keys in Gurasuraisu localStorage.',
-            'clear storage': 'Clears all Gurasuraisu localStorage data (requires confirmation in parent).',
+            'get storage <key>': 'Retrieves a value from Polygol localStorage.',
+            'set storage <key> <value>': 'Sets a value in Polygol localStorage.',
+            'rm storage <key>': 'Removes a key from Polygol localStorage.',
+            'ls storage': 'Lists all keys in Polygol localStorage.',
+            'clear storage': 'Clears all Polygol localStorage data (requires confirmation in parent).',
             'ls idb': 'Lists all IndexedDB database names.',
             'ls idb <dbName>': 'Lists all Object Stores in a specific database.',
             'get idb <dbName> <storeName> [key]': 'Reads all records or a specific record from an Object Store.',
             'set idb <dbName> <storeName> <key> <jsonData>': 'Writes/updates a record in an Object Store (privileged).',
             'rm idb <dbName> <storeName> <key>': 'Deletes a record from an Object Store by its key (privileged).',
             'clear idb <dbName> <storeName>': 'Clears all records from an Object Store (privileged).',
-            'get setting <key>': 'Retrieves a Gurasuraisu setting value (from localStorage).',
-            'set setting <key> <value>': 'Sets a Gurasuraisu setting value.',
-            'list settings': 'Lists common Gurasuraisu settings.',
+            'get setting <key>': 'Retrieves a Polygol setting value (from localStorage).',
+            'set setting <key> <value>': 'Sets a Polygol setting value.',
+            'list settings': 'Lists common Polygol settings.',
             'get brightness': 'Gets the current screen brightness (0-100).',
             'set brightness <value>': 'Sets screen brightness (0-100).',
             'get theme': 'Gets the current theme (light/dark).',
@@ -304,16 +304,16 @@
             'rm wallpaper <index>': 'Removes a wallpaper by index (requires confirmation in parent).',
             'clear wallpapers': 'Clears all custom wallpapers (requires confirmation in parent).',
             'open app <url>': 'Opens another Gurapp by URL (e.g., "/appstore/index.html").',
-            'show popup <message>': 'Displays a temporary popup message on Gurasuraisu.',
-            'show notification <message>': 'Displays a persistent notification on Gurasuraisu.',
+            'show popup <message>': 'Displays a temporary popup message on Polygol.',
+            'show notification <message>': 'Displays a persistent notification on Polygol.',
             'minimize': 'Minimizes the current Terminal Gurapp.',
-            'blackout': 'Turns the Gurasuraisu screen black.',
+            'blackout': 'Turns the Polygol screen black.',
             'list apps': 'Lists all installed Gurapps.',
             'install app <name> <url> <iconUrl>': 'Installs a new Gurapp (privileged, dangerous. Requires unlock).',
             'delete app <name>': 'Deletes an installed Gurapp (privileged).',
-            'get time': 'Gets the current time from Gurasuraisu.',
-            'reboot': 'Reloads the Gurasuraisu parent page (privileged).',
-            'pwa install': 'Prompts Gurasuraisu to install as a PWA.',
+            'get time': 'Gets the current time from Polygol.',
+            'reboot': 'Reloads the Polygol parent page (privileged).',
+            'pwa install': 'Prompts Polygol to install as a PWA.',
             'unlock <answer>': 'Solves the challenge to unlock the run command for 10 minutes.',
             'run <javascript_code>': 'Executes JavaScript code in the parent context (HIGHLY PRIVILEGED & DANGEROUS! Requires unlock).'
         };
@@ -710,11 +710,11 @@
         inputField.focus();
 
         // Initial welcome message
-        appendOutput('Gurasuraisu Terminal', 'output-info');
+        appendOutput('Polygol Terminal', 'output-info');
         appendOutput('Commands executed in the Terminal may NOT be reversible!', 'output-info');
-        appendOutput('If someone told you to copy/paste something here, there’s an 200/10 chance you’re being scammed. Pasting anything in here could give attackers access to your Gurasuraisu data.', 'output-info');
+        appendOutput('If someone told you to copy/paste something here, there’s an 200/10 chance you’re being scammed. Pasting anything in here could give attackers access to your Polygol data.', 'output-info');
         appendOutput('Type \'help\' to see a list of commands.', 'output-info');
-        appendOutput('Some commands are privileged and may require confirmation in the parent Gurasuraisu window.', 'output-info');
+        appendOutput('Some commands are privileged and may require confirmation in the parent Polygol window.', 'output-info');
 
         // Handle messages from the parent (Gurasuraisu)
         window.addEventListener('message', (event) => {
@@ -729,10 +729,10 @@
                         break;
                     case 'localStorageKeysList':
                         if (data.keys && data.keys.length > 0) {
-                            appendOutput('Gurasuraisu LocalStorage Keys:', 'output-info');
+                            appendOutput('Polygol LocalStorage Keys:', 'output-info');
                             data.keys.forEach(key => appendOutput(`- ${key}`));
                         } else {
-                            appendOutput('No Gurasuraisu LocalStorage keys found.', 'output-info');
+                            appendOutput('No Polygol LocalStorage keys found.', 'output-info');
                         }
                         break;
                     case 'idbDatabasesList':
@@ -769,7 +769,7 @@
                         break;
                     case 'commonSettingsList':
                         if (data.settings && Object.keys(data.settings).length > 0) {
-                            appendOutput('Common Gurasuraisu Settings:', 'output-info');
+                            appendOutput('Common Polygol Settings:', 'output-info');
                             for (const setting in data.settings) {
                                 appendOutput(`- ${setting}: ${JSON.stringify(data.settings[setting])}`);
                             }
@@ -809,23 +809,23 @@
                         break;
                     case 'parentActionSuccess':
                         if (data.message) {
-                            appendOutput(`Gurasuraisu: ${data.message}`, 'output-success');
+                            appendOutput(`Polygol: ${data.message}`, 'output-success');
                         } else {
-                            appendOutput('Gurasuraisu action successful.', 'output-success');
+                            appendOutput('Polygol action successful.', 'output-success');
                         }
                         break;
                     case 'parentActionInfo':
                         if (data.message) {
-                            appendOutput(`Gurasuraisu: ${data.message}`, 'output-info');
+                            appendOutput(`Polygol: ${data.message}`, 'output-info');
                         } else {
-                            appendOutput('Gurasuraisu info received.', 'output-info');
+                            appendOutput('Polygol info received.', 'output-info');
                         }
                         break;
                     case 'parentActionError':
                         if (data.message) {
-                            appendOutput(`Gurasuraisu Error: ${data.message}`, 'output-error');
+                            appendOutput(`Polygol Error: ${data.message}`, 'output-error');
                         } else {
-                            appendOutput('Gurasuraisu action failed.', 'output-error');
+                            appendOutput('Polygol action failed.', 'output-error');
                         }
                         break;
                     case 'themeUpdate': // Handle theme changes from parent
