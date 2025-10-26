@@ -571,8 +571,9 @@
 
                 case 'delete app':
                     if (args.length > 0) {
-                        Gurasuraisu.deleteApp(args[0]); // Parent handles confirmation
-                        appendOutput(`Deletion request sent for '${args[0]}'.`, 'output-info');
+                        const appName = args.join(' ');
+                        Gurasuraisu.deleteApp(appName); // Parent handles confirmation
+                        appendOutput(`Deletion request sent for '${appName}'.`, 'output-info');
                     } else {
                         appendOutput('Usage: delete app <name>', 'output-error');
                     }
@@ -603,9 +604,13 @@
                     
                     if (isInstall) {
                         if (args.length >= 3) {
-                            const appData = { name: args[0], url: args[1], iconUrl: args[2], filesToCache: [args[1], args[2]] };
+                            const iconUrl = args[args.length - 1];
+                            const url = args[args.length - 2];
+                            const name = args.slice(0, args.length - 2).join(' ');
+                            
+                            const appData = { name, url, iconUrl, filesToCache: [url, iconUrl] };
                             Gurasuraisu.installApp(appData);
-                            appendOutput(`Installation request sent for '${args[0]}'.`, 'output-info');
+                            appendOutput(`Installation request sent for '${name}'.`, 'output-info');
                         } else {
                             appendOutput('Usage: install app <name> <url> <iconUrl>', 'output-error');
                         }
