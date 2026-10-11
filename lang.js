@@ -1,4 +1,4 @@
-const LANG_EN_TERMINAL = {
+window.LANG_EN_TERMINAL = {
     TITLE: "Terminal",
     WELCOME_TITLE: "Polygol Terminal",
     WELCOME_L1: "Commands executed in the Terminal may NOT be reversible!",
@@ -15,10 +15,11 @@ const LANG_EN_TERMINAL = {
     UNLOCK_EXPIRED: "Access to privileged commands has expired.",
     UNLOCK_NO_CHALLENGE: "No active challenge. Try a privileged command first.",
     UNLOCK_FAILED: "Try again. The challenge has been reset.",
-    USAGE_ERROR: "Usage: {usage}"
+    USAGE_ERROR: "Usage: {usage}",
+    CLEAR_ERROR: "Invalid \"clear\" command usage.",
 };
 
-const LANG_JP_TERMINAL = {
+window.LANG_JP_TERMINAL = {
     TITLE: "Terminal",
     WELCOME_TITLE: "ぐら すらいす ターミナル",
     WELCOME_L1: "ターミナルで実行されたコマンドは元に戻せない場合があります！",
@@ -35,10 +36,11 @@ const LANG_JP_TERMINAL = {
     UNLOCK_EXPIRED: "特権コマンドへのアクセスが期限切れになりました。",
     UNLOCK_NO_CHALLENGE: "アクティブなチャレンジはありません。まず特権コマンドを試してください。",
     UNLOCK_FAILED: "もう一度お試しください。チャレンジはリセットされました。",
-    USAGE_ERROR: "使用法：{usage}"
+    USAGE_ERROR: "使用法：{usage}",
+    CLEAR_ERROR: "「clear」コマンドの使用方法が無効です。",
 };
 
-const LANG_KO_TERMINAL = {
+window.LANG_KO_TERMINAL = {
     TITLE: "Terminal",
     WELCOME_TITLE: "구라수라이수 터미널",
     WELCOME_L1: "터미널에서 실행된 명령어는 되돌릴 수 없을 수 있습니다!",
@@ -55,10 +57,11 @@ const LANG_KO_TERMINAL = {
     UNLOCK_EXPIRED: "특권 명령어에 대한 접근이 만료되었습니다.",
     UNLOCK_NO_CHALLENGE: "활성 챌린지가 없습니다. 먼저 특권 명령어를 시도해보세요.",
     UNLOCK_FAILED: "다시 시도하세요. 챌린지가 초기화되었습니다.",
-    USAGE_ERROR: "사용법: {usage}"
+    USAGE_ERROR: "사용법: {usage}",
+    CLEAR_ERROR: "\"clear\" 명령 사용법이 잘못되었습니다.",
 };
 
-const LANG_ZH_TERMINAL = {
+window.LANG_ZH_TERMINAL = {
     TITLE: "Terminal",
     WELCOME_TITLE: "Polygol 终端",
     WELCOME_L1: "在终端中执行的命令可能无法撤销！",
@@ -75,5 +78,11 @@ const LANG_ZH_TERMINAL = {
     UNLOCK_EXPIRED: "特权命令的访问权限已过期。",
     UNLOCK_NO_CHALLENGE: "没有活动的挑战。请先尝试一个特权命令。",
     UNLOCK_FAILED: "请重试。挑战已重置。",
-    USAGE_ERROR: "用法：{usage}"
+    USAGE_ERROR: "用法：{usage}",
+    CLEAR_ERROR: "\"clear\" 命令用法无效。",
 };
+
+var LANG_EN_TERMINAL = window.LANG_EN_TERMINAL;
+var LANG_JP_TERMINAL = window.LANG_JP_TERMINAL;
+var LANG_KO_TERMINAL = window.LANG_KO_TERMINAL;
+var LANG_ZH_TERMINAL = window.LANG_ZH_TERMINAL;
