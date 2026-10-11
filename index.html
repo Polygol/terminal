@@ -4,19 +4,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Terminal only works with Polygol.</title>
+    <script src="lang.js">
+        // --- Internationalization (i18n) Support ---
+        function getAppLanguage() {
+            let l = (localStorage.getItem('language') || localStorage.getItem('selectedLanguage') || 'EN').toUpperCase();
+            if (l === 'JA') l = 'JP';
+            return ['EN', 'JP', 'KO', 'ZH'].includes(l) ? l : 'EN';
+        }
+
+        function t(key, params = {}) {
+            const lang = getAppLanguage();
+            const dict = window['LANG_' + lang + '_TERMINAL'] || window['LANG_EN_TERMINAL'] || {};
+            let str = dict[key] || key;
+            Object.keys(params).forEach(p => {
+                str = str.replace(new RegExp('\\{' + p + '\\}', 'g'), params[p]);
+            });
+            return str;
+        }
+
+        function applyLanguage(langCode) {
+            if (langCode) localStorage.setItem('language', langCode);
+            const lang = getAppLanguage();
+            const bcpMap = { EN: 'en-US', JP: 'ja-JP', KO: 'ko-KR', ZH: 'zh-CN' };
+            document.documentElement.lang = bcpMap[lang] || 'en-US';
+            document.querySelectorAll('[data-lang-key]').forEach(el => {
+                const k = el.getAttribute('data-lang-key');
+                if (k) {
+                    if (el.tagName === 'TITLE') {
+                        document.title = t(k);
+                    } else {
+                        el.textContent = t(k);
+                    }
+                }
+            });
+            document.querySelectorAll('[data-lang-placeholder]').forEach(el => {
+                const k = el.getAttribute('data-lang-placeholder');
+                if (k) el.placeholder = t(k);
+            });
+            document.querySelectorAll('[data-lang-title]').forEach(el => {
+                const k = el.getAttribute('data-lang-title');
+                if (k) el.title = t(k);
+            });
+            if (typeof onLanguageChanged === 'function') {
+                onLanguageChanged(lang);
+            }
+        }
+
+        window.addEventListener('message', (e) => {
+            if (e.data && (e.data.type === 'languageUpdate' || e.data.type === 'localeUpdate')) {
+                applyLanguage(e.data.languageCode);
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => applyLanguage());
+        
+
+    </script>
+    <title data-lang-key="TITLE">Terminal only works with Polygol.</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <script src="https://cdn.jsdelivr.net/gh/Polygol/polygol.github.io@main/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/gh/Polygol/polygol.github.io@main/assets/polygolapp/api/polygol-api.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
-            --gurapp-background: var(--background-color-dark);
-            --gurapp-text-primary: var(--text-color-dark);
-            --gurapp-text-secondary: var(--secondary-text-color-dark);
-            --gurapp-glass-bg: var(--modal-transparent-dark);
-            --gurapp-input-bg: var(--search-background-dark);
-            --gurapp-border: var(--glass-border-dark);
+            --polygolapp-background: var(--background-color-dark);
+            --polygolapp-text-primary: var(--text-color-dark);
+            --polygolapp-text-secondary: var(--secondary-text-color-dark);
+            --polygolapp-glass-bg: var(--modal-transparent-dark);
+            --polygolapp-input-bg: var(--search-background-dark);
+            --polygolapp-border: var(--glass-border-dark);
 
             --terminal-error-color: #e57373; /* Light red */
             --terminal-info-color: #64b5f6; /* Light blue */
@@ -25,13 +81,13 @@
 
         /* Default to Dark Theme colors */
         body {
-            --gurapp-background: var(--background-color-dark);
-            --gurapp-background-tr: var(--background-color-dark-tr);
-            --gurapp-text-primary: var(--text-color-dark);
-            --gurapp-text-secondary: var(--secondary-text-color-dark);
-            --gurapp-glass-bg: var(--modal-transparent-dark);
-            --gurapp-input-bg: var(--search-background-dark);
-            --gurapp-border: var(--glass-border-dark);
+            --polygolapp-background: var(--background-color-dark);
+            --polygolapp-background-tr: var(--background-color-dark-tr);
+            --polygolapp-text-primary: var(--text-color-dark);
+            --polygolapp-text-secondary: var(--secondary-text-color-dark);
+            --polygolapp-glass-bg: var(--modal-transparent-dark);
+            --polygolapp-input-bg: var(--search-background-dark);
+            --polygolapp-border: var(--glass-border-dark);
 
             --terminal-error-color: #e57373;
             --terminal-info-color: #64b5f6;
@@ -40,20 +96,20 @@
         
         /* Light Theme overrides for terminal */
         body.light-theme {
-            --gurapp-background: var(--background-color-light);
-            --gurapp-background-tr: var(--background-color-light-tr);
-            --gurapp-text-primary: var(--text-color-light);
-            --gurapp-text-secondary: var(--secondary-text-color-light);
-            --gurapp-glass-bg: var(--modal-transparent-light);
-            --gurapp-input-bg: var(--search-background-light);
-            --gurapp-border: var(--glass-border-light);
+            --polygolapp-background: var(--background-color-light);
+            --polygolapp-background-tr: var(--background-color-light-tr);
+            --polygolapp-text-primary: var(--text-color-light);
+            --polygolapp-text-secondary: var(--secondary-text-color-light);
+            --polygolapp-glass-bg: var(--modal-transparent-light);
+            --polygolapp-input-bg: var(--search-background-light);
+            --polygolapp-border: var(--glass-border-light);
 
             --terminal-error-color: #c62828; /* Darker red */
             --terminal-info-color: #1976d2; /* Darker blue */
             --terminal-success-color: #388e3c; /* Darker green */
         }
         
-        /* Global styles for cursor and numeric alignment (from Gurasuraisu common styles) */
+        /* Global styles for cursor and numeric alignment (from Polygol common styles) */
         * {
             margin: 0;
             padding: 0;
@@ -64,8 +120,8 @@
 
         body {
             font-family: 'JetBrains Mono', monospace;
-            background-color: var(--gurapp-background-tr);
-            color: var(--gurapp-text-primary);
+            background-color: var(--polygolapp-background-tr);
+            color: var(--polygolapp-text-primary);
             padding: 20px;
             display: flex;
             flex-direction: column;
@@ -90,9 +146,9 @@
         .terminal-input-container {
             display: flex;
             align-items: center;
-            border: 1px solid var(--gurapp-border);
+            border: 1px solid var(--polygolapp-border);
             border-radius: 25px; /* More rounded for input */
-            background-color: var(--gurapp-input-bg);
+            background-color: var(--polygolapp-input-bg);
             padding: 10px 15px;
             --fx-filter: var(--blur1) glass(0.6, 8, 0);
             box-shadow: var(--sun-shadow);
@@ -101,7 +157,7 @@
         }
 
         .terminal-prompt {
-            color: var(--gurapp-text-secondary); /* Secondary text color for prompt */
+            color: var(--polygolapp-text-secondary); /* Secondary text color for prompt */
             margin-right: 8px;
             flex-shrink: 0;
             font-weight: 500;
@@ -111,11 +167,11 @@
             flex-grow: 1;
             background: transparent;
             border: none;
-            color: var(--gurapp-text-primary); /* Primary text color for input */
+            color: var(--polygolapp-text-primary); /* Primary text color for input */
             font-family: 'JetBrains Mono', monospace;
             font-size: 1em;
             outline: none;
-            caret-color: var(--gurapp-text-primary); /* Cursor matches primary text */
+            caret-color: var(--polygolapp-text-primary); /* Cursor matches primary text */
             padding: 0;
         }
 
@@ -137,7 +193,7 @@
         }
 
         .output-prompt {
-            color: var(--gurapp-text-secondary); /* Prompt in output uses secondary text color */
+            color: var(--polygolapp-text-secondary); /* Prompt in output uses secondary text color */
         }
     </style>
 </head>
@@ -147,7 +203,7 @@
         <span class="terminal-prompt">-></span>
         <input type="text" id="terminal-input" autofocus autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
-    <span style="text-align: center; font-size: 10px;">Do not paste unknown commands in Terminal</span>
+    <span style="text-align: center; font-size: 10px;"><span data-lang-key="PASTE_WARNING">Do not paste unknown commands in Terminal</span></span>
 
     <script>
         document.body.dataset.appName = "Terminal"; // Ensure this is set for API calls
@@ -204,14 +260,14 @@
             'switch wallpaper <left|right|index>': 'Switches to next/previous wallpaper or jumps to index.',
             'rm wallpaper <index>': 'Removes a wallpaper by index (requires confirmation in parent).',
             'clear wallpapers': 'Clears all custom wallpapers (requires confirmation in parent).',
-            'open app <url>': 'Opens another Gurapp by URL (e.g., "./appstore/index.html").',
+            'open app <url>': 'Opens another Polygolapp by URL (e.g., "./appstore/index.html").',
             'show popup <message>': 'Displays a temporary popup message on Polygol.',
             'show notification <message>': 'Displays a persistent notification on Polygol.',
-            'minimize': 'Minimizes the current Terminal Gurapp.',
+            'minimize': 'Minimizes the current Terminal Polygolapp.',
             'blackout': 'Turns the Polygol screen black.',
-            'list apps': 'Lists all installed Gurapps.',
-            'install app <name> <url> <iconUrl>': 'Installs a new Gurapp (privileged, dangerous. Requires unlock).',
-            'delete app <name>': 'Deletes an installed Gurapp (privileged).',
+            'list apps': 'Lists all installed Polygolapps.',
+            'install app <name> <url> <iconUrl>': 'Installs a new Polygolapp (privileged, dangerous. Requires unlock).',
+            'delete app <name>': 'Deletes an installed Polygolapp (privileged).',
             'get time': 'Gets the current time from Polygol.',
             'reboot': 'Reloads the Polygol parent page (privileged).',
             'pwa install': 'Prompts Polygol to install as a PWA.',
@@ -264,18 +320,18 @@
                         outputDiv.innerHTML = '';
                     } else if (args[0] === 'storage') {
                         // Parent will handle confirmation
-                        Gurasuraisu._call('clearLocalStorage');
+                        Polygol._call('clearLocalStorage');
                     } else if (args[0] === 'wallpapers') {
                         // Parent will handle confirmation
-                        Gurasuraisu._call('clearAllWallpapers');
+                        Polygol._call('clearAllWallpapers');
                     } else {
                         appendOutput('Usage: clear [storage|wallpapers]', 'output-error');
-                        Gurasuraisu.showPopup('Invalid "clear" command usage.');
+                        Polygol.showPopup('Invalid "clear" command usage.');
                     }
                     break;
                 case 'clear idb':
                     if (args.length === 2) {
-                        Gurasuraisu.clearIDBStore(args[0], args[1]);
+                        Polygol.clearIDBStore(args[0], args[1]);
                     } else {
                         appendOutput('Usage: clear idb <dbName> <storeName>', 'output-error');
                     }
@@ -285,18 +341,18 @@
                 case 'get storage':
                 case 'get setting':
                     if (args.length > 0) {
-                        Gurasuraisu._call('getLocalStorageItem', [args[0]]);
+                        Polygol._call('getLocalStorageItem', [args[0]]);
                     } else {
                         appendOutput(`Usage: ${cmd} <key>`, 'output-error');
                     }
                     break;
                 case 'get idb':
                     if (args.length === 2) { // get idb dbName storeName
-                        Gurasuraisu.getIDBRecord(args[0], args[1], null); // null key gets all
+                        Polygol.getIDBRecord(args[0], args[1], null); // null key gets all
                     } else if (args.length === 3) { // get idb dbName storeName key
                         // Keys can be numbers, so we try to parse them
                         const key = isNaN(parseInt(args[2])) ? args[2] : parseInt(args[2]);
-                        Gurasuraisu.getIDBRecord(args[0], args[1], key);
+                        Polygol.getIDBRecord(args[0], args[1], key);
                     } else {
                         appendOutput('Usage: get idb <dbName> <storeName> [key]', 'output-error');
                     }
@@ -315,7 +371,7 @@
                         if (jsonStartIndex > -1) {
                             const jsonData = command.substring(jsonStartIndex);
                             const finalKey = isNaN(Number(key)) ? key : Number(key);
-                            Gurasuraisu.setIDBRecord(dbName, storeName, finalKey, jsonData);
+                            Polygol.setIDBRecord(dbName, storeName, finalKey, jsonData);
                         } else {
                             appendOutput('Invalid command format. JSON data must start with {', 'output-error');
                         }
@@ -326,33 +382,33 @@
                 case 'rm idb':
                     if (args.length === 3) {
                         const key = isNaN(parseInt(args[2])) ? args[2] : parseInt(args[2]);
-                        Gurasuraisu.removeIDBRecord(args[0], args[1], key);
+                        Polygol.removeIDBRecord(args[0], args[1], key);
                     } else {
                         appendOutput('Usage: rm idb <dbName> <storeName> <key>', 'output-error');
                     }
                     break;
                 case 'ls storage':
-                    Gurasuraisu._call('listLocalStorageKeys');
+                    Polygol._call('listLocalStorageKeys');
                     break;
                 case 'ls idb':
                      if (args.length === 0) {
-                        Gurasuraisu.listIDBDatabases();
+                        Polygol.listIDBDatabases();
                     } else if (args.length === 1) {
-                        Gurasuraisu.listIDBStores(args[0]);
+                        Polygol.listIDBStores(args[0]);
                     } else {
                         appendOutput('Usage: ls idb [dbName]', 'output-error');
                     }
                 case 'get brightness':
-                    Gurasuraisu._call('getLocalStorageItem', ['page_brightness']);
+                    Polygol._call('getLocalStorageItem', ['page_brightness']);
                     break;
                 case 'get theme':
-                    Gurasuraisu._call('getLocalStorageItem', ['theme']);
+                    Polygol._call('getLocalStorageItem', ['theme']);
                     break;
                 case 'get animations':
-                    Gurasuraisu._call('getLocalStorageItem', ['animationsEnabled']);
+                    Polygol._call('getLocalStorageItem', ['animationsEnabled']);
                     break;
                 case 'get time':
-                    Gurasuraisu._call('getCurrentTimeParent');
+                    Polygol._call('getCurrentTimeParent');
                     break;
 
                 case 'set storage':
@@ -360,7 +416,7 @@
                     if (args.length >= 2) {
                         const key = args[0];
                         const value = args.slice(1).join(' ');
-                        Gurasuraisu._call('setLocalStorageItem', [key, value]);
+                        Polygol._call('setLocalStorageItem', [key, value]);
                     } else {
                         appendOutput(`Usage: ${cmd} <key> <value>`, 'output-error');
                     }
@@ -368,14 +424,14 @@
                 case 'set brightness':
                     const brightnessValue = parseInt(args[0]);
                     if (!isNaN(brightnessValue) && brightnessValue >= 0 && brightnessValue <= 100) {
-                        Gurasuraisu._call('setLocalStorageItem', ['page_brightness', brightnessValue.toString()]);
+                        Polygol._call('setLocalStorageItem', ['page_brightness', brightnessValue.toString()]);
                     } else {
                         appendOutput('Invalid brightness value. Must be between 0 and 100.', 'output-error');
                     }
                     break;
                 case 'set theme':
                     if (args[0] === 'light' || args[0] === 'dark') {
-                        Gurasuraisu._call('setLocalStorageItem', ['theme', args[0]]);
+                        Polygol._call('setLocalStorageItem', ['theme', args[0]]);
                     } else {
                         appendOutput('Usage: set theme <light|dark>', 'output-error');
                     }
@@ -383,7 +439,7 @@
                 case 'set animations':
                     if (args[0] === 'on' || args[0] === 'off') {
                         const enabled = args[0] === 'on';
-                        Gurasuraisu._call('setLocalStorageItem', ['animationsEnabled', enabled.toString()]);
+                        Polygol._call('setLocalStorageItem', ['animationsEnabled', enabled.toString()]);
                     } else {
                         appendOutput('Usage: set animations <on|off>', 'output-error');
                     }
@@ -391,7 +447,7 @@
 
                 case 'rm storage':
                     if (args.length > 0) {
-                        Gurasuraisu._call('removeLocalStorageItem', [args[0]]);
+                        Polygol._call('removeLocalStorageItem', [args[0]]);
                     } else {
                         appendOutput('Usage: rm storage <key>', 'output-error');
                     }
@@ -399,29 +455,29 @@
                 case 'rm wallpaper':
                     const rmIndex = parseInt(args[0]);
                     if (!isNaN(rmIndex)) {
-                        Gurasuraisu._call('removeWallpaperAtIndex', [rmIndex]);
+                        Polygol._call('removeWallpaperAtIndex', [rmIndex]);
                     } else {
                         appendOutput('Invalid wallpaper index. Must be a number.', 'output-error');
                     }
                     break;
 
                 case 'ls storage':
-                    Gurasuraisu._call('listLocalStorageKeys');
+                    Polygol._call('listLocalStorageKeys');
                     break;
                 case 'ls wallpapers':
-                    Gurasuraisu._call('listRecentWallpapers');
+                    Polygol._call('listRecentWallpapers');
                     break;
 
                 case 'list apps':
-                    Gurasuraisu.requestInstalledApps();
+                    Polygol.requestInstalledApps();
                     break;
                 case 'list settings':
-                    Gurasuraisu._call('listCommonSettings');
+                    Polygol._call('listCommonSettings');
                     break;
 
                 case 'open app':
                     if (args.length > 0) {
-                        Gurasuraisu.openApp(args[0]);
+                        Polygol.openApp(args[0]);
                         appendOutput(`Attempting to open app: ${args[0]}`, 'output-info');
                     } else {
                         appendOutput('Usage: open app <url>', 'output-error');
@@ -434,10 +490,10 @@
                         const message = args.join(' ');
                         const isPopup = cmd.includes('popup');
                         if (isPopup) {
-                            Gurasuraisu.showPopup(message);
+                            Polygol.showPopup(message);
                             appendOutput(`Popup sent: '${message}'`, 'output-info');
                         } else {
-                            Gurasuraisu.showNotification(message, { icon: 'info' });
+                            Polygol.showNotification(message, { icon: 'info' });
                             appendOutput(`Notification sent: '${message}'`, 'output-info');
                         }
                     } else {
@@ -446,23 +502,23 @@
                     break;
                 
                 case 'minimize':
-                    Gurasuraisu.minimize();
+                    Polygol.minimize();
                     break;
                 case 'blackout':
-                    Gurasuraisu.blackout();
+                    Polygol.blackout();
                     break;
                 case 'reboot':
-                    Gurasuraisu._call('rebootGurasuraisu');
+                    Polygol._call('rebootPolygol');
                     break;
                 
                 case 'pwa install':
-                    Gurasuraisu._call('promptPWAInstall');
+                    Polygol._call('promptPWAInstall');
                     appendOutput('PWA installation prompt sent (if available).', 'output-info');
                     break;
 
                 case 'switch wallpaper':
                      if (args.length > 0) {
-                        Gurasuraisu._call('switchWallpaperParent', [args[0]]);
+                        Polygol._call('switchWallpaperParent', [args[0]]);
                     } else {
                         appendOutput('Usage: switch wallpaper <left|right|index>', 'output-error');
                     }
@@ -471,7 +527,7 @@
                 case 'delete app':
                     if (args.length > 0) {
                         const appName = args.join(' ');
-                        Gurasuraisu.deleteApp(appName); // Parent handles confirmation
+                        Polygol.deleteApp(appName); // Parent handles confirmation
                         appendOutput(`Deletion request sent for '${appName}'.`, 'output-info');
                     } else {
                         appendOutput('Usage: delete app <name>', 'output-error');
@@ -508,7 +564,7 @@
                             const name = args.slice(0, args.length - 2).join(' ');
                             
                             const appData = { name, url, iconUrl, filesToCache: [url, iconUrl] };
-                            Gurasuraisu.installApp(appData);
+                            Polygol.installApp(appData);
                             appendOutput(`Installation request sent for '${name}'.`, 'output-info');
                         } else {
                             appendOutput('Usage: install app <name> <url> <iconUrl>', 'output-error');
@@ -516,7 +572,7 @@
                     } else if (cmd === 'run') {
                         if (args.length > 0) {
                             const code = args.join(' ');
-                            Gurasuraisu._call('executeParentJS', [code]);
+                            Polygol._call('executeParentJS', [code]);
                             appendOutput(`Executing JS in parent: '${code}'`, 'output-info');
                         } else {
                             appendOutput('Usage: run <javascript_code>', 'output-error');
@@ -532,7 +588,7 @@
                             if (jsonStartIndex > -1) {
                                 const jsonData = command.substring(jsonStartIndex);
                                 const finalKey = isNaN(Number(key)) ? key : Number(key);
-                                Gurasuraisu.setIDBRecord(dbName, storeName, finalKey, jsonData);
+                                Polygol.setIDBRecord(dbName, storeName, finalKey, jsonData);
                             } else {
                                 appendOutput('Invalid command format. JSON data must start with {', 'output-error');
                             }
@@ -542,13 +598,13 @@
                     } else if (cmd === 'rm idb') {
                         if (args.length === 3) {
                             const key = isNaN(Number(args[2])) ? args[2] : Number(args[2]);
-                            Gurasuraisu.removeIDBRecord(args[0], args[1], key);
+                            Polygol.removeIDBRecord(args[0], args[1], key);
                         } else {
                             appendOutput('Usage: rm idb <dbName> <storeName> <key>', 'output-error');
                         }
                     } else if (cmd === 'clear idb') {
                         if (args.length === 2) {
-                            Gurasuraisu.clearIDBStore(args[0], args[1]);
+                            Polygol.clearIDBStore(args[0], args[1]);
                         } else {
                             appendOutput('Usage: clear idb <dbName> <storeName>', 'output-error');
                         }
@@ -616,13 +672,13 @@
         inputField.focus();
 
         // Initial welcome message
-        appendOutput('Polygol Terminal', 'output-info');
-        appendOutput('Commands executed in the Terminal may NOT be reversible!', 'output-info');
-        appendOutput('If someone told you to copy/paste something here, there’s an 200/10 chance you’re being scammed. Pasting anything in here could give attackers access to your Polygol data.', 'output-info');
-        appendOutput('Type \'help\' to see a list of commands.', 'output-info');
-        appendOutput('Some commands are privileged and may require confirmation in the parent Polygol window.', 'output-info');
+        appendOutput(t('WELCOME_TITLE'), 'output-info');
+        appendOutput(t('WELCOME_L1'), 'output-info');
+        appendOutput(t('WELCOME_L2'), 'output-info');
+        appendOutput(t('WELCOME_L3'), 'output-info');
+        appendOutput(t('WELCOME_L4'), 'output-info');
 
-        // Handle messages from the parent (Gurasuraisu)
+        // Handle messages from the parent (Polygol)
         window.addEventListener('message', (event) => {
             if (event.origin !== window.location.origin) return;
 
@@ -685,10 +741,10 @@
                         break;
                     case 'installed-apps-list':
                         if (data.apps && data.apps.length > 0) {
-                            appendOutput('Installed Gurapps:', 'output-info');
+                            appendOutput('Installed Polygolapps:', 'output-info');
                             data.apps.forEach(app => appendOutput(`- ${app}`));
                         } else {
-                            appendOutput('No Gurapps found.', 'output-info');
+                            appendOutput('No Polygolapps found.', 'output-info');
                         }
                         break;
                     case 'recentWallpapersList':
